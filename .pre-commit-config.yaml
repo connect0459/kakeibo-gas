@@ -1,0 +1,34 @@
+repos:
+  - repo: https://github.com/biomejs/pre-commit
+    rev: "v2.5.12"
+    hooks:
+      - id: biome-check
+        language_version: lts
+        additional_dependencies: ["@biomejs/biome@2.5.12"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+        language_version: lts
+        args: ["--fix"]
+
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript Type Check
+        entry: npm run typecheck
+        language: system
+        files: \\.ts$
+        pass_filenames: false
