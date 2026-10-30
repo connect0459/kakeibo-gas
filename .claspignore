@@ -1,0 +1,18 @@
+# Ignore all files
+**/**
+
+# Push only the following files
+!appsscript.json
+!dist/**/*.js
+
+# Ignore node_modules and source files
+node_modules/**
+src/**/*.ts
+tests/**
+*.md
+*.json
+!appsscript.json
+rollup.config.js
+tsconfig.json
+.git/**
+.gitignore
