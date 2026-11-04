@@ -96,7 +96,7 @@ The type vocabulary above mixes two axes: an **impact axis** (`feat`, `fix`, `pe
 ### Body and Footer (optional)
 
 - Explain **why**, not what
-- `BREAKING CHANGE: <description>`, or `Closes #123`
+- `BREAKING CHANGE: <description>`, or `Closes <https://github.com/owner/repo/issues/123>`
 
 ### Branch naming
 
