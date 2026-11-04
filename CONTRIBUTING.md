@@ -59,7 +59,7 @@ This project follows **Red → Green → Refactor** (Detroit-school TDD):
 - **Scope** is optional: a feature directory name such as `aggregation`, `archive`, `config`, or `date`.
 - **Subject**: imperative mood, 72 characters max, no trailing period.
 - **Body** (optional): explain **why**, not what.
-- **Footer** (optional): `BREAKING CHANGE: <description>`, or `Closes #123`.
+- **Footer** (optional): `BREAKING CHANGE: <description>`, or `Closes <https://github.com/owner/repo/issues/123>`.
 
 ## Pull request process
 
