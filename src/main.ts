@@ -47,8 +47,15 @@ const getActiveTimeZone = (): string =>
 const INTERACTIVE_LOCK_WAIT_MS = 30000;
 const TRIGGER_LOCK_WAIT_MS = 0;
 
+let cachedScriptLock: GoogleAppsScript.Lock.Lock | null = null;
+
+const getScriptLock = (): GoogleAppsScript.Lock.Lock => {
+  cachedScriptLock ??= LockService.getScriptLock();
+  return cachedScriptLock;
+};
+
 const runWithScriptLock = <T>(waitMs: number, work: () => T) =>
-  runExclusively(LockService.getScriptLock(), waitMs, work);
+  runExclusively(getScriptLock(), waitMs, work);
 
 type Notice = { title: string; body: string };
 
@@ -354,7 +361,6 @@ const archivePreviousMonthData = (): void => {
         plan,
       });
 
-      // Completion message
       applyCurrentMonthPeriod();
 
       return { title: alerts.doneTitle, body: alerts.archived(plan.rowsToArchive.length) };
@@ -676,8 +682,8 @@ const runAggregation = (): void => {
     if (!resultSheet) {
       resultSheet = getOrCreateResultSheet();
       // Set the initial period
-      setCurrentMonthPeriod();
-      return; // runAggregation is called inside setCurrentMonthPeriod, so finish here
+      applyCurrentMonthPeriod();
+      return;
     }
 
     // Get the aggregation period

@@ -115,7 +115,7 @@ A single GAS script; each feature below is a directory under `src/features/`.
 | `input` | Create the input sheet: header row, styles, date and amount formats, type dropdown | `getOrCreateInputSheet` | Unit (fake spreadsheet) |
 | `locale` | Text dictionaries (`ja`, `en`) and the rule that picks one for a spreadsheet. `detectLocale` reads a spreadsheet's sheet names and locale and picks the dictionary | No (a minimal spreadsheet interface) | Unit |
 | `result` | Write the summary and the income and expense tables to the result sheet, and return their row ranges | `displayResults` | Unit (fake sheet) |
-| `lock` | Run work only while holding a lock (`tryLock`/`releaseLock`), release it on failure, and report a skipped run | `runExclusively` | Unit (in-memory lock) |
+| `lock` | Run work only while holding a lock (`tryLock`/`releaseLock`), release it on failure, report a skipped run, and run nested work on a lock this execution already holds without waiting for it | `runExclusively` | Unit (in-memory lock) |
 | `throttle` | Decide whether a recorded last run is still inside the throttle window | No | Unit |
 
 `src/main.ts` has no tests of its own; the code that creates the input sheet and writes the result tables was moved out so that it is covered (`features/input`, `features/result`). Result sheet creation (`getOrCreateResultSheet`), the charts, and the archive flow still live in `main.ts` untested. `tests/architecture/` scans the production sources and fails on a Japanese string literal outside the `ja` dictionary (only `features/config/defaultConfigRows.ja.ts`, the Japanese default config rows, is exempt). `tests/integration/` combines feature functions (config reading with aggregation, archive sheet creation with archive reading) but does not run `main.ts`. The fake spreadsheet in `src/testing/` keeps one final state per A1 range (value, format, style, validation), so a test can check what a range ended up as but not the order of writes, and a write to an overlapping range is not merged into another.
@@ -152,7 +152,7 @@ Input and archive columns: date, type, category, description, income, expense (A
 ### 4.3 Script lock
 
 - **Type**: `LockService` script lock (no extra OAuth scope)
-- **Purpose**: Serialize aggregation, archive, and input reset so they never interleave. The edit trigger (`generateStatistics`) does not wait and skips when the lock is held; menu actions wait up to 30 seconds and then show a busy message. Confirmation and result dialogs are shown outside the lock. The throttle covers repeated triggers; the lock covers overlap
+- **Purpose**: Serialize aggregation, archive, and input reset so they never interleave. The edit trigger (`generateStatistics`) does not wait and skips when the lock is held; menu actions wait up to 30 seconds and then show a busy message. Confirmation and result dialogs are shown outside the lock. Nested calls made while the lock is held (for example the aggregation that the archive or a period action starts) run directly instead of waiting for the lock they already hold. The throttle covers repeated triggers; the lock covers overlap
 
 ## 5. External Integrations / APIs
 

@@ -79,15 +79,56 @@ describe("runExclusively", () => {
     expect(lock.held).toBe(true);
   });
 
-  it("Does not let two overlapping runs both do the work", () => {
+  it("Does not let a run on another holder of the lock do the work", () => {
     const lock = new InMemoryLock();
+    const otherHolder = new InMemoryLock();
+    otherHolder.held = true;
     let inner: ReturnType<typeof runExclusively<string>> | undefined;
 
     runExclusively(lock, 0, () => {
-      inner = runExclusively(lock, 0, () => "second");
+      inner = runExclusively(otherHolder, 0, () => "second");
     });
 
     expect(inner).toEqual({ ran: false });
+  });
+
+  it("Runs nested work on the same lock without waiting for itself", () => {
+    const lock = new InMemoryLock();
+    let inner: ReturnType<typeof runExclusively<string>> | undefined;
+
+    runExclusively(lock, 30000, () => {
+      inner = runExclusively(lock, 30000, () => "nested");
+    });
+
+    expect(inner).toEqual({ ran: true, value: "nested" });
+    expect(lock.waits).toEqual([30000]);
+  });
+
+  it("Keeps the lock held until the outer work finishes", () => {
+    const lock = new InMemoryLock();
+    let heldAfterNested = false;
+
+    runExclusively(lock, 0, () => {
+      runExclusively(lock, 0, () => undefined);
+      heldAfterNested = lock.held;
+    });
+
+    expect(heldAfterNested).toBe(true);
+    expect(lock.held).toBe(false);
+  });
+
+  it("Takes the lock again after a nested run that threw", () => {
+    const lock = new InMemoryLock();
+
+    expect(() =>
+      runExclusively(lock, 0, () => {
+        runExclusively(lock, 0, () => {
+          throw new Error("boom");
+        });
+      }),
+    ).toThrow("boom");
+
+    expect(runExclusively(lock, 0, () => "again")).toEqual({ ran: true, value: "again" });
   });
 
   it("Waits up to the given time for the lock", () => {
