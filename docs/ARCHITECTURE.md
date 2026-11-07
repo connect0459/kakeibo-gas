@@ -118,6 +118,8 @@ A single GAS script; each feature below is a directory under `src/features/`.
 | `lock` | Run work only while holding a lock (`tryLock`/`releaseLock`), release it on failure, report a skipped run, and run nested work on a lock this execution already holds without waiting for it | `runExclusively` | Unit (in-memory lock) |
 | `throttle` | Decide whether a recorded last run is still inside the throttle window | No | Unit |
 
+`TransactionData` and `CategoryAggregation` are owned by `features/aggregation/types.ts`. `TransactionData` is the input contract of the aggregation functions, and its producers (`data`, `archive`) conform to it, so the dependency points from producer to consumer and only for types. Do not redeclare either type elsewhere.
+
 `src/main.ts` has no tests of its own; the code that creates the input sheet and writes the result tables was moved out so that it is covered (`features/input`, `features/result`). Result sheet creation (`getOrCreateResultSheet`), the charts, and the archive flow still live in `main.ts` untested. `tests/architecture/` scans the production sources and fails on a Japanese string literal outside the `ja` dictionary (only `features/config/defaultConfigRows.ja.ts`, the Japanese default config rows, is exempt). `tests/integration/` combines feature functions (config reading with aggregation, archive sheet creation with archive reading) but does not run `main.ts`. The fake spreadsheet in `src/testing/` keeps one final state per A1 range (value, format, style, validation), so a test can check what a range ended up as but not the order of writes, and a write to an overlapping range is not merged into another.
 
 ## 4. Data Stores
