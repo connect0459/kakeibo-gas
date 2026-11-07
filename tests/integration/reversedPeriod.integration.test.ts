@@ -5,7 +5,7 @@ type Gas = typeof globalThis & Record<string, unknown>;
 
 const SHEET_NAMES = Object.values(en.sheets);
 
-const buildResultSheet = (startDate: Date, endDate: Date) => {
+const buildResultSheet = (startDate: unknown, endDate: unknown) => {
   const cells: Record<string, unknown> = { B2: startDate, D2: endDate, A1: "Existing title" };
   const range = (address: string) => ({
     getValue: () => cells[address],
@@ -52,7 +52,7 @@ const installGasGlobals = (resultSheet: ReturnType<typeof buildResultSheet>) => 
   return { ui, cache, spreadsheet };
 };
 
-describe("an aggregation period whose start is after its end", () => {
+describe("an aggregation period on the result sheet", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.spyOn(console, "log").mockImplementation(() => undefined);
@@ -67,36 +67,65 @@ describe("an aggregation period whose start is after its end", () => {
     delete gas.CacheService;
   });
 
-  const runTrigger = async () => {
-    const reversed = buildResultSheet(
-      new Date("2025-12-31T00:00:00+09:00"),
-      new Date("2025-01-01T00:00:00+09:00"),
-    );
-    const gasEnvironment = installGasGlobals(reversed);
+  const runTrigger = async (startDate: unknown, endDate: unknown) => {
+    const resultSheet = buildResultSheet(startDate, endDate);
+    const gasEnvironment = installGasGlobals(resultSheet);
     await import("../../src/main");
     (globalThis as Gas & { generateStatistics: () => void }).generateStatistics();
-    return { reversed, ...gasEnvironment };
+    return { resultSheet, ...gasEnvironment };
   };
 
-  it("tells the user the period is invalid", async () => {
-    const { ui } = await runTrigger();
+  const runReversed = () =>
+    runTrigger(new Date("2025-12-31T00:00:00+09:00"), new Date("2025-01-01T00:00:00+09:00"));
 
-    expect(ui.alert).toHaveBeenCalledTimes(1);
-    expect(ui.alert).toHaveBeenCalledWith(en.alerts.errorTitle, en.alerts.invalidPeriod, "OK");
+  describe("whose start is after its end", () => {
+    it("tells the user the period is invalid", async () => {
+      const { ui } = await runReversed();
+
+      expect(ui.alert).toHaveBeenCalledTimes(1);
+      expect(ui.alert).toHaveBeenCalledWith(en.alerts.errorTitle, en.alerts.invalidPeriod, "OK");
+    });
+
+    it("leaves the previous result untouched", async () => {
+      const { resultSheet, spreadsheet } = await runReversed();
+
+      expect(spreadsheet.getSheetByName).not.toHaveBeenCalledWith(en.sheets.input);
+      expect(resultSheet.getDataRange).not.toHaveBeenCalled();
+      expect(resultSheet.getCharts).not.toHaveBeenCalled();
+      expect(resultSheet.cells.A1).toBe("Existing title");
+    });
+
+    it("does not record the run for throttling", async () => {
+      const { cache } = await runReversed();
+
+      expect(cache.put).not.toHaveBeenCalled();
+    });
   });
 
-  it("leaves the previous result untouched", async () => {
-    const { reversed, spreadsheet } = await runTrigger();
+  describe("that only becomes reversed once a missing date is filled in", () => {
+    const runFilledIn = () => runTrigger("", new Date("2020-01-31T00:00:00+09:00"));
 
-    expect(spreadsheet.getSheetByName).not.toHaveBeenCalledWith(en.sheets.input);
-    expect(reversed.getDataRange).not.toHaveBeenCalled();
-    expect(reversed.getCharts).not.toHaveBeenCalled();
-    expect(reversed.cells.A1).toBe("Existing title");
+    it("is rejected without writing the filled-in date into the cell", async () => {
+      const { ui, resultSheet } = await runFilledIn();
+
+      expect(ui.alert).toHaveBeenCalledWith(en.alerts.errorTitle, en.alerts.invalidPeriod, "OK");
+      expect(resultSheet.cells.B2).toBe("");
+    });
   });
 
-  it("does not record the run for throttling", async () => {
-    const { cache } = await runTrigger();
+  describe("whose start is before its end", () => {
+    it("proceeds to aggregate without an invalid-period alert", async () => {
+      const { ui, spreadsheet } = await runTrigger(
+        new Date("2025-01-01T00:00:00+09:00"),
+        new Date("2025-12-31T00:00:00+09:00"),
+      );
 
-    expect(cache.put).not.toHaveBeenCalled();
+      expect(spreadsheet.getSheetByName).toHaveBeenCalledWith(en.sheets.input);
+      expect(ui.alert).not.toHaveBeenCalledWith(
+        en.alerts.errorTitle,
+        en.alerts.invalidPeriod,
+        "OK",
+      );
+    });
   });
 });
