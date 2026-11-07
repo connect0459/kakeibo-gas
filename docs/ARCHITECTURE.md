@@ -18,7 +18,7 @@ kakeibo-gas/
 │       ├── chart/                 # resolveChartRange
 │       ├── config/                # initializeConfigSheet, readConfigSheet, getDefaultConfigRows, defaultConfigRows.{ja,en}, types
 │       ├── data/                  # processRawData (raw sheet rows -> TransactionData)
-│       ├── date/                  # calculatePeriodDates, formatDateToString, startOfDayInZone
+│       ├── date/                  # calculatePeriodDates, formatDateToString, parsePeriod, startOfDayInZone
 │       ├── dialog/                # buildPeriodDialogHtml
 │       ├── input/                 # getOrCreateInputSheet
 │       ├── locale/                # ja / en dictionaries, resolveLocale, detectLocale
@@ -79,7 +79,7 @@ Boundaries: pure logic lives under `src/features/`; spreadsheet I/O, UI, and com
 ### 3.1 Frontend
 
 - **Name**: Spreadsheet UI
-- **Description**: A custom menu (`onOpen`) with period shortcuts (current month, last month, current year), a custom-period dialog, archive, and input-sheet reset. The dialog HTML is built by `buildPeriodDialogHtml`, which escapes the locale text it embeds, and served by `HtmlService`; confirmations and errors use `ui.alert`.
+- **Description**: A custom menu (`onOpen`) with period shortcuts (current month, last month, current year), a custom-period dialog, archive, and input-sheet reset. The dialog HTML is built by `buildPeriodDialogHtml`, which escapes the locale text it embeds, and served by `HtmlService`; confirmations and errors use `ui.alert`. `setCustomPeriod` is reachable through `google.script.run`, so the server re-validates the dates with `parsePeriod` (strict `yyyy-MM-dd`, a real calendar date, start not after end) and builds the title from the validated values; only a validation failure shows the invalid-date alert, and any other error shows its own message.
 - **Technologies**: Google Sheets UI, `HtmlService`, `google.script.run`
 - **Deployment**: Shipped inside `dist/main.js`
 
