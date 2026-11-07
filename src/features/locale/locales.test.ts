@@ -77,8 +77,7 @@ describe("ja dictionary", () => {
       type: "分類",
       category: "科目",
       description: "摘要",
-      income: "収入",
-      expense: "支出",
+      amount: "金額",
     });
   });
 
@@ -111,6 +110,12 @@ describe("ja dictionary", () => {
   it("reports categories in the transactions that the config sheet does not list", () => {
     expect(ja.alerts.categoriesNotListed(["支出-交通費-電車", "支出-その他"])).toBe(
       "設定シートにない科目の取引があります。設定シートに科目を追加してください: 支出-交通費-電車、支出-その他",
+    );
+  });
+
+  it("reports categories whose amount sign contradicts their income or expense kind", () => {
+    expect(ja.alerts.categoriesWithSignMismatch(["支出-食費-外食", "収入-給与-本給"])).toBe(
+      "金額の符号が科目の収支と一致しない科目があります（収入は正、支出は負にしてください）: 支出-食費-外食、収入-給与-本給",
     );
   });
 
@@ -179,6 +184,12 @@ describe("en dictionary", () => {
       en.alerts.categoriesWithoutKind("Income/Expense", ["Expense-Food", "Expense-Other"]),
     ).toBe(
       'These categories in the config sheet have no valid "Income/Expense" value: Expense-Food, Expense-Other',
+    );
+  });
+
+  it("reports categories whose amount sign contradicts their income or expense kind", () => {
+    expect(en.alerts.categoriesWithSignMismatch(["Expense-Food", "Income-Salary"])).toBe(
+      "These categories have an amount whose sign does not match their income or expense kind (income must be positive, expense negative): Expense-Food, Income-Salary",
     );
   });
 

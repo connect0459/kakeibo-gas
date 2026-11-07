@@ -67,7 +67,6 @@ describe("getOrCreateArchiveSheet", () => {
       expect(mockSheet.getRange).toHaveBeenCalledWith("C1");
       expect(mockSheet.getRange).toHaveBeenCalledWith("D1");
       expect(mockSheet.getRange).toHaveBeenCalledWith("E1");
-      expect(mockSheet.getRange).toHaveBeenCalledWith("F1");
     });
 
     test("Writes the Japanese header row for the ja locale", () => {
@@ -84,8 +83,7 @@ describe("getOrCreateArchiveSheet", () => {
         B1: "分類",
         C1: "科目",
         D1: "摘要",
-        E1: "収入",
-        F1: "支出",
+        E1: "金額",
       });
     });
 
@@ -104,8 +102,7 @@ describe("getOrCreateArchiveSheet", () => {
         B1: "Type",
         C1: "Category",
         D1: "Description",
-        E1: "Income",
-        F1: "Expense",
+        E1: "Amount",
       });
     });
 
@@ -119,7 +116,7 @@ describe("getOrCreateArchiveSheet", () => {
       );
 
       // Verify the header row style settings
-      expect(mockSheet.getRange).toHaveBeenCalledWith("A1:F1");
+      expect(mockSheet.getRange).toHaveBeenCalledWith("A1:E1");
     });
 
     test("Sets the formats of the date and amount columns", () => {
@@ -133,12 +130,12 @@ describe("getOrCreateArchiveSheet", () => {
 
       // Verify the format settings
       expect(mockSheet.getRange).toHaveBeenCalledWith("A2:A1000");
-      expect(mockSheet.getRange).toHaveBeenCalledWith("E2:F1000");
+      expect(mockSheet.getRange).toHaveBeenCalledWith("E2:E1000");
     });
   });
 
   describe("Amount column format", () => {
-    test("Formats the income and expense columns without a currency sign, like the live archive sheet", () => {
+    test("Formats the amount column without a currency sign, like the live archive sheet", () => {
       const formats: Record<string, string> = {};
       const mockSheet = {
         getRange: vi.fn((range: string) => {
@@ -165,7 +162,7 @@ describe("getOrCreateArchiveSheet", () => {
         ja.headers,
       );
 
-      expect(formats["E2:F1000"]).toBe("#,##0");
+      expect(formats["E2:E1000"]).toBe("#,##0");
     });
   });
 

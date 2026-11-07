@@ -13,8 +13,7 @@ export type ConfigObject = {
     TYPE: number; // Column B: type (cash, bank, etc.)
     CATEGORY: number; // Column C: category
     DESCRIPTION: number; // Column D: description
-    INCOME: number; // Column E: income
-    EXPENSE: number; // Column F: expense
+    AMOUNT: number; // Column E: signed amount (income positive, expense negative)
   };
 
   // Archive sheet column definitions (same structure as the input sheet)
@@ -23,8 +22,7 @@ export type ConfigObject = {
     TYPE: number;
     CATEGORY: number;
     DESCRIPTION: number;
-    INCOME: number;
-    EXPENSE: number;
+    AMOUNT: number;
   };
 
   // Type options

@@ -12,8 +12,8 @@ export const STATIC_CONFIG = {
   RESULT_AMOUNT_FORMAT: "¥#,##0",
   RESULT_RATIO_FORMAT: "0.0%",
 
-  // Number of columns the script reads and writes on the input and archive sheets (A to F)
-  TRANSACTION_COLUMN_COUNT: 6,
+  // Number of columns the script reads and writes on the input and archive sheets (A to E)
+  TRANSACTION_COLUMN_COUNT: 5,
 
   // Input sheet column definitions (0-based index)
   INPUT_COLUMNS: {
@@ -21,8 +21,7 @@ export const STATIC_CONFIG = {
     TYPE: 1, // Column B: type (cash, bank, etc.)
     CATEGORY: 2, // Column C: category
     DESCRIPTION: 3, // Column D: description
-    INCOME: 4, // Column E: income
-    EXPENSE: 5, // Column F: expense
+    AMOUNT: 4, // Column E: signed amount (income positive, expense negative)
   },
 
   // Archive sheet column definitions (same structure as the input sheet)
@@ -31,8 +30,7 @@ export const STATIC_CONFIG = {
     TYPE: 1,
     CATEGORY: 2,
     DESCRIPTION: 3,
-    INCOME: 4,
-    EXPENSE: 5,
+    AMOUNT: 4,
   },
 
   // Chart settings

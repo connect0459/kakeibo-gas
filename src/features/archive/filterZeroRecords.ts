@@ -1,21 +1,14 @@
+import { STATIC_CONFIG } from "../../config";
+
 /**
  * Filters out zero-amount records
  *
- * @param data - Data array to filter (values of columns A to F)
+ * @param data - Data array to filter (values of columns A to E)
  * @returns Data array without zero-amount records
  */
 export const filterZeroRecords = (data: unknown[][]): unknown[][] => {
   return data.filter((row) => {
-    const income = row[4]; // Column E (income)
-    const expense = row[5]; // Column F (expense)
-
-    // Function that determines whether a value is 0 or blank
-    const isZeroOrEmpty = (value: unknown): boolean => {
-      return value === null || value === undefined || value === "" || value === 0;
-    };
-
-    // Exclude when both income and expense are 0 or blank (return false)
-    // Keep otherwise (return true)
-    return !(isZeroOrEmpty(income) && isZeroOrEmpty(expense));
+    const amount = row[STATIC_CONFIG.INPUT_COLUMNS.AMOUNT];
+    return !(amount === null || amount === undefined || amount === "" || amount === 0);
   });
 };

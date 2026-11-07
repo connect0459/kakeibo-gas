@@ -13,8 +13,7 @@ export const ja: Locale = {
     type: "分類",
     category: "科目",
     description: "摘要",
-    income: "収入",
-    expense: "支出",
+    amount: "金額",
   },
   configHeaders: {
     type: "分類",
@@ -89,9 +88,11 @@ export const ja: Locale = {
     summaryFailed: (message) => `集計処理中にエラーが発生しました: ${message}`,
     sheetNotFound: (sheetName) => `「${sheetName}」シートが見つかりません。`,
     invalidAmount: (sheetName, row) =>
-      `「${sheetName}」シートの${row}行目の金額が不正です。1000 や 1,000 のような 0 以上の数値を入力してください。`,
+      `「${sheetName}」シートの${row}行目の金額が不正です。1000、1,000、-1,000 のような数値を入力してください。`,
     categoriesWithoutKind: (kindColumn, categories) =>
       `設定シートの「${kindColumn}」列が未設定または不正な科目があります: ${categories.join("、")}`,
+    categoriesWithSignMismatch: (categories) =>
+      `金額の符号が科目の収支と一致しない科目があります（収入は正、支出は負にしてください）: ${categories.join("、")}`,
     categoriesNotListed: (categories) =>
       `設定シートにない科目の取引があります。設定シートに科目を追加してください: ${categories.join("、")}`,
   },

@@ -1,6 +1,7 @@
 import { STATIC_CONFIG } from "./config";
 import { aggregateByCategory } from "./features/aggregation/aggregateByCategory";
 import { filterDataByDate } from "./features/aggregation/filterDataByDate";
+import { findSignMismatches } from "./features/aggregation/findSignMismatches";
 import { findUnlistedCategories } from "./features/aggregation/findUnlistedCategories";
 import type { CategoryAggregation } from "./features/aggregation/types";
 import { commitArchive } from "./features/archive/commitArchive";
@@ -458,6 +459,11 @@ const generateStatisticsForPeriod = (
     const unlistedCategories = findUnlistedCategories(filteredData, catalog);
     if (unlistedCategories.length > 0) {
       throw new Error(locale.alerts.categoriesNotListed(unlistedCategories));
+    }
+
+    const signMismatches = findSignMismatches(filteredData, catalog);
+    if (signMismatches.length > 0) {
+      throw new Error(locale.alerts.categoriesWithSignMismatch(signMismatches));
     }
 
     // Aggregate by income/expense type

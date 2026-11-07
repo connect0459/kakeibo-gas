@@ -3,11 +3,11 @@ import { commitArchive } from "./commitArchive";
 
 type Grid = unknown[][];
 
-const BLANK = ["", "", "", "", "", ""];
-const HEADER = ["h", "", "", "", "", ""];
-const past = ["2026-08-15", "Cash", "Food", "lunch", "", 800];
-const current = ["2026-09-05", "Cash", "Food", "dinner", "", 1200];
-const carry = ["2026-09-01", "Cash", "Carry", "carry", 0, 0];
+const BLANK = ["", "", "", "", ""];
+const HEADER = ["h", "", "", "", ""];
+const past = ["2026-08-15", "Cash", "Food", "lunch", -800];
+const current = ["2026-09-05", "Cash", "Food", "dinner", -1200];
+const carry = ["2026-09-01", "Cash", "Carry", "carry", 0];
 
 class FakeGrid {
   rows: Grid;
@@ -56,8 +56,8 @@ const plan = {
 };
 const values = [past, current];
 const formulas = [
-  ["", "", "", "", "", ""],
-  ["", "", "", "", "", "=E3*0.1"],
+  ["", "", "", "", ""],
+  ["", "", "", "", "=E3*0.1"],
 ];
 
 describe("commitArchive", () => {
@@ -76,7 +76,7 @@ describe("commitArchive", () => {
     expect(archive.rows[1]).toEqual(past);
     expect(input.rows.slice(1)).toEqual([
       carry,
-      ["2026-09-05", "Cash", "Food", "dinner", "", "=E3*0.1"],
+      ["2026-09-05", "Cash", "Food", "dinner", "=E3*0.1"],
     ]);
   });
 

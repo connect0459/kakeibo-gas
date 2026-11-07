@@ -16,9 +16,9 @@ A household budget (*kakeibo*) system built on Google Sheets and Google Apps Scr
 
 ## Amounts
 
-The input sheet, the archive sheet, and the archive operation read amounts by one rule. An amount is empty (counted as 0), a number, or text of plain digits that may use `,` as a thousands separator and `.` as a decimal point, such as `1000` or `1,000`.
+The input sheet, the archive sheet, and the archive operation read amounts by one rule. The input and archive sheets have one amount column (E). An income is entered as a positive amount and an expense as a negative one. An amount is empty (counted as 0), a number, or text of plain digits that may start with `-` and use `,` as a thousands separator and `.` as a decimal point, such as `1000`, `1,000`, or `-1,000`.
 
-Anything else stops the run with an error that names the sheet and the row: negative values (`-500`), accounting styles (`(1,000)`, `▲500`), a Unicode minus (`−500`), exponent notation (`1e3`), currency symbols, and other text. Nothing is dropped or reinterpreted silently. Forms such as `.5`, `1.`, and `+5` are rejected too: write `0.5`, `1`, and `5`. Enter a refund as a positive amount in the opposite column (income instead of expense).
+Anything else stops the run with an error that names the sheet and the row: accounting styles (`(1,000)`, `▲500`), a Unicode minus (`−500`), exponent notation (`1e3`), currency symbols, and other text. Nothing is dropped or reinterpreted silently. Forms such as `.5`, `1.`, and `+5` are rejected too: write `0.5`, `1`, and `5`. The sign must agree with the category's kind in the config sheet: a positive amount on an expense category, or a negative one on an income category, stops the aggregation with an error that names the category. A refund is entered as a positive amount on an income category.
 
 ## Language
 

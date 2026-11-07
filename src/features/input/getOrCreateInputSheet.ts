@@ -24,14 +24,13 @@ export const getOrCreateInputSheet = (
     inputSheet.getRange("B1").setValue(headers.type);
     inputSheet.getRange("C1").setValue(headers.category);
     inputSheet.getRange("D1").setValue(headers.description);
-    inputSheet.getRange("E1").setValue(headers.income);
-    inputSheet.getRange("F1").setValue(headers.expense);
+    inputSheet.getRange("E1").setValue(headers.amount);
 
-    inputSheet.getRange("A1:F1").setFontWeight("bold");
-    inputSheet.getRange("A1:F1").setBackground("#f3f3f3");
+    inputSheet.getRange("A1:E1").setFontWeight("bold");
+    inputSheet.getRange("A1:E1").setBackground("#f3f3f3");
 
     inputSheet.getRange("A2:A1000").setNumberFormat(STATIC_CONFIG.DATE_FORMAT);
-    inputSheet.getRange("E2:F1000").setNumberFormat(STATIC_CONFIG.AMOUNT_FORMAT);
+    inputSheet.getRange("E2:E1000").setNumberFormat(STATIC_CONFIG.AMOUNT_FORMAT);
 
     const typeValidation = SpreadsheetApp.newDataValidation()
       .requireValueInList(typeOptions(), true)

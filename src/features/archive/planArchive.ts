@@ -25,14 +25,13 @@ const COLUMN = {
   DATE: 0,
   TYPE: 1,
   CATEGORY: 2,
-  INCOME: 4,
-  EXPENSE: 5,
+  AMOUNT: 4,
 } as const;
 
 const FIRST_INPUT_ROW = 2;
 
 const isBlankRow = (row: readonly unknown[]): boolean =>
-  !row[0] && !row[1] && !row[2] && !row[3] && !row[4] && !row[5];
+  !row[0] && !row[1] && !row[2] && !row[3] && !row[4];
 
 const isValidDate = (value: unknown): value is Date =>
   value instanceof Date && !Number.isNaN(value.getTime());
@@ -99,20 +98,18 @@ export const planArchive = (
 
     archivedIndexes.push(index);
 
-    const income = parseAmount(row[COLUMN.INCOME]);
-    const expense = parseAmount(row[COLUMN.EXPENSE]);
-    if (income === null || expense === null) {
+    const amount = parseAmount(row[COLUMN.AMOUNT]);
+    if (amount === null) {
       throw new Error(labels.describeInvalidAmount(index + FIRST_INPUT_ROW));
     }
 
     if (type) {
-      balanceByType.set(type, (balanceByType.get(type) as number) + income - expense);
+      balanceByType.set(type, (balanceByType.get(type) as number) + amount);
     }
 
     if (row[COLUMN.CATEGORY] === labels.carryoverCategory) {
       const zeroed = [...row];
-      zeroed[COLUMN.INCOME] = 0;
-      zeroed[COLUMN.EXPENSE] = 0;
+      zeroed[COLUMN.AMOUNT] = 0;
       rowsToMove.push(zeroed);
     } else {
       rowsToMove.push([...row]);
@@ -124,8 +121,7 @@ export const planArchive = (
     type,
     labels.carryoverCategory,
     labels.describeCarryover(type),
-    balance > 0 ? balance : 0,
-    balance < 0 ? Math.abs(balance) : 0,
+    balance,
   ]);
 
   return {

@@ -15,9 +15,7 @@ const createTransaction = (category: string, income: number, expense: number): T
   type: "現金",
   category,
   description: "",
-  income,
-  expense,
-  total: income - expense,
+  amount: income - expense,
 });
 
 const HEADER = ["分類", "科目", "集計から除外", "収支"];

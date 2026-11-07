@@ -13,8 +13,7 @@ export const en: Locale = {
     type: "Type",
     category: "Category",
     description: "Description",
-    income: "Income",
-    expense: "Expense",
+    amount: "Amount",
   },
   configHeaders: {
     type: "Type",
@@ -90,9 +89,11 @@ export const en: Locale = {
     summaryFailed: (message) => `An error occurred while summarizing: ${message}`,
     sheetNotFound: (sheetName) => `The sheet "${sheetName}" was not found.`,
     invalidAmount: (sheetName, row) =>
-      `Invalid amount in sheet "${sheetName}", row ${row}. Enter a non-negative number such as 1000 or 1,000.`,
+      `Invalid amount in sheet "${sheetName}", row ${row}. Enter a number such as 1000, 1,000, or -1,000.`,
     categoriesWithoutKind: (kindColumn, categories) =>
       `These categories in the config sheet have no valid "${kindColumn}" value: ${categories.join(", ")}`,
+    categoriesWithSignMismatch: (categories) =>
+      `These categories have an amount whose sign does not match their income or expense kind (income must be positive, expense negative): ${categories.join(", ")}`,
     categoriesNotListed: (categories) =>
       `These categories in the transactions are missing from the config sheet; add them there: ${categories.join(", ")}`,
   },
