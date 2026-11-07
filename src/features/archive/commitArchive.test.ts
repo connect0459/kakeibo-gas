@@ -54,6 +54,7 @@ const plan = {
   archivedIndexes: [0],
   carryForwardRows: [carry],
 };
+const values = [past, current];
 const formulas = [
   ["", "", "", "", "", ""],
   ["", "", "", "", "", "=E3*0.1"],
@@ -64,7 +65,13 @@ describe("commitArchive", () => {
     const input = new FakeGrid([HEADER, past, current]);
     const archive = new FakeGrid([HEADER, BLANK, BLANK]);
 
-    commitArchive({ inputSheet: input.sheet(), archiveSheet: archive.sheet(), formulas, plan });
+    commitArchive({
+      inputSheet: input.sheet(),
+      archiveSheet: archive.sheet(),
+      values,
+      formulas,
+      plan,
+    });
 
     expect(archive.rows[1]).toEqual(past);
     expect(input.rows.slice(1)).toEqual([
@@ -81,7 +88,13 @@ describe("commitArchive", () => {
     const archiveBefore = archive.rows.map((row) => [...row]);
 
     expect(() =>
-      commitArchive({ inputSheet: input.sheet(), archiveSheet: archive.sheet(), formulas, plan }),
+      commitArchive({
+        inputSheet: input.sheet(),
+        archiveSheet: archive.sheet(),
+        values,
+        formulas,
+        plan,
+      }),
     ).toThrow("quota exceeded");
 
     expect(input.rows).toEqual(inputBefore);
@@ -96,7 +109,13 @@ describe("commitArchive", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() =>
-      commitArchive({ inputSheet: input.sheet(), archiveSheet: archive.sheet(), formulas, plan }),
+      commitArchive({
+        inputSheet: input.sheet(),
+        archiveSheet: archive.sheet(),
+        values,
+        formulas,
+        plan,
+      }),
     ).toThrow("quota exceeded");
     expect(log).toHaveBeenCalled();
 

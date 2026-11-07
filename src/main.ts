@@ -310,6 +310,7 @@ const archivePreviousMonthData = (): void => {
     commitArchive({
       inputSheet,
       archiveSheet,
+      values: inputData,
       formulas,
       plan,
     });

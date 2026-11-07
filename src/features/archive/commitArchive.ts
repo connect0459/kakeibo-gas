@@ -18,10 +18,11 @@ const lastUsedRow = (sheet: GoogleAppsScript.Spreadsheet.Sheet): number => {
 export const commitArchive = (params: {
   inputSheet: GoogleAppsScript.Spreadsheet.Sheet;
   archiveSheet: GoogleAppsScript.Spreadsheet.Sheet;
+  values: readonly (readonly unknown[])[];
   formulas: readonly (readonly string[])[];
   plan: ArchivePlan;
 }): void => {
-  const { inputSheet, archiveSheet, formulas, plan } = params;
+  const { inputSheet, archiveSheet, values, formulas, plan } = params;
   const appended = plan.rowsToArchive.length;
   const insertRow = lastUsedRow(archiveSheet) + 1;
 
@@ -29,6 +30,7 @@ export const commitArchive = (params: {
     keptRows: plan.keptRows,
     archivedIndexes: plan.archivedIndexes,
     carryForwardRows: plan.carryForwardRows,
+    values,
     formulas,
   });
 

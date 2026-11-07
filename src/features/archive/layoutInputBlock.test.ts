@@ -7,6 +7,8 @@ const NO_FORMULAS = (count: number): string[][] =>
 const withFormulaInF = (count: number, formula: string): string[][] =>
   Array.from({ length: count }, () => ["", "", "", "", "", formula]);
 
+const NO_VALUES = (count: number): unknown[][] => Array.from({ length: count }, () => [...BLANK]);
+
 const kept = (index: number, row: unknown[]) => ({ index, row });
 
 describe("layoutInputBlock", () => {
@@ -17,6 +19,7 @@ describe("layoutInputBlock", () => {
       keptRows: [kept(2, row)],
       archivedIndexes: [],
       carryForwardRows: [],
+      values: NO_VALUES(3),
       formulas: NO_FORMULAS(3),
     });
 
@@ -30,6 +33,7 @@ describe("layoutInputBlock", () => {
       keptRows: [kept(0, row)],
       archivedIndexes: [],
       carryForwardRows: [],
+      values: NO_VALUES(1),
       formulas: [["", "", "", "", "", "=E2*0.1"]],
     });
 
@@ -41,6 +45,7 @@ describe("layoutInputBlock", () => {
       keptRows: [],
       archivedIndexes: [],
       carryForwardRows: [],
+      values: NO_VALUES(2),
       formulas: withFormulaInF(2, "=E2*0.1"),
     });
 
@@ -55,6 +60,7 @@ describe("layoutInputBlock", () => {
       keptRows: [],
       archivedIndexes: [0],
       carryForwardRows: [],
+      values: NO_VALUES(1),
       formulas: withFormulaInF(1, "=E2*0.1"),
     });
 
@@ -70,6 +76,7 @@ describe("layoutInputBlock", () => {
       keptRows: [kept(2, current)],
       archivedIndexes: [0, 1],
       carryForwardRows: [carryA, carryB],
+      values: NO_VALUES(3),
       formulas: withFormulaInF(3, "=E2*0.1"),
     });
 
@@ -83,6 +90,7 @@ describe("layoutInputBlock", () => {
       keptRows: [],
       archivedIndexes: [],
       carryForwardRows: [carry],
+      values: NO_VALUES(2),
       formulas: NO_FORMULAS(2),
     });
 
@@ -98,9 +106,36 @@ describe("layoutInputBlock", () => {
       keptRows: [kept(0, current)],
       archivedIndexes: [1],
       carryForwardRows: [carryA, carryB],
+      values: NO_VALUES(2),
       formulas: NO_FORMULAS(2),
     });
 
     expect(block).toEqual([current, carryA, carryB]);
+  });
+
+  it("keeps the values of a row that is neither kept nor archived", () => {
+    const stray = ["", "", "", "note", 0, ""];
+
+    const block = layoutInputBlock({
+      keptRows: [],
+      archivedIndexes: [],
+      carryForwardRows: [],
+      values: [stray],
+      formulas: NO_FORMULAS(1),
+    });
+
+    expect(block).toEqual([stray]);
+  });
+
+  it("clears the values of an archived row", () => {
+    const block = layoutInputBlock({
+      keptRows: [],
+      archivedIndexes: [0],
+      carryForwardRows: [],
+      values: [["2026-08-15", "Cash", "Food", "lunch", "", 800]],
+      formulas: NO_FORMULAS(1),
+    });
+
+    expect(block).toEqual([BLANK]);
   });
 });
