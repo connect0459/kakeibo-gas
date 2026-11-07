@@ -113,6 +113,12 @@ describe("ja dictionary", () => {
     );
   });
 
+  it("reports categories whose amount sign contradicts their income or expense kind", () => {
+    expect(ja.alerts.categoriesWithSignMismatch(["支出-食費-外食", "収入-給与-本給"])).toBe(
+      "金額の符号が科目の収支と一致しない科目があります（収入は正、支出は負にしてください）: 支出-食費-外食、収入-給与-本給",
+    );
+  });
+
   it("keeps the carryover category and fallback group the aggregation already matches", () => {
     expect(ja.vocabulary.carryoverCategory).toBe("収入-繰越金");
     expect(ja.vocabulary.otherGroup).toBe("その他");
@@ -178,6 +184,12 @@ describe("en dictionary", () => {
       en.alerts.categoriesWithoutKind("Income/Expense", ["Expense-Food", "Expense-Other"]),
     ).toBe(
       'These categories in the config sheet have no valid "Income/Expense" value: Expense-Food, Expense-Other',
+    );
+  });
+
+  it("reports categories whose amount sign contradicts their income or expense kind", () => {
+    expect(en.alerts.categoriesWithSignMismatch(["Expense-Food", "Income-Salary"])).toBe(
+      "These categories have an amount whose sign does not match their income or expense kind (income must be positive, expense negative): Expense-Food, Income-Salary",
     );
   });
 

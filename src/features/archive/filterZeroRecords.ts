@@ -1,3 +1,5 @@
+import { STATIC_CONFIG } from "../../config";
+
 /**
  * Filters out zero-amount records
  *
@@ -6,7 +8,7 @@
  */
 export const filterZeroRecords = (data: unknown[][]): unknown[][] => {
   return data.filter((row) => {
-    const amount = row[4]; // Column E (signed amount)
+    const amount = row[STATIC_CONFIG.INPUT_COLUMNS.AMOUNT];
     return !(amount === null || amount === undefined || amount === "" || amount === 0);
   });
 };

@@ -35,7 +35,7 @@ const emptyAggregation = (): CategoryAggregation => Object.create(null);
  * @param catalog - Categories of the config sheet, with their kind and exclusion flag
  * @param otherGroup - Group to use when the category name is empty
  * @returns Aggregation result by category
- * @throws When an amount is not a number, or its sign contradicts the category's kind (income must be positive, expense negative)
+ * @throws When an amount is not finite, or its sign contradicts the category's kind; callers report the latter beforehand with findSignMismatches
  *
  * @example
  * ```typescript
@@ -73,9 +73,12 @@ export const aggregateByCategory = (
     const mainCategory = getCategoryMainGroup(item.category, otherGroup);
     const amount = kind === "income" ? item.amount : -item.amount;
 
-    if (!(amount >= 0)) {
+    if (!Number.isFinite(amount)) {
+      throw new Error(`Cannot aggregate a non-finite amount for "${item.category}"`);
+    }
+    if (amount < 0) {
       throw new Error(
-        `The amount of "${item.category}" has a sign that does not match its ${kind} kind`,
+        `Cannot aggregate an amount that contradicts the ${kind} kind of "${item.category}"`,
       );
     }
     if (!mainCategory || amount === 0) {

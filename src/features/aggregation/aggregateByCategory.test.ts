@@ -253,7 +253,7 @@ describe("aggregateByCategory", () => {
       ];
 
       expect(() => aggregate(transactions, "income")).toThrow(
-        'The amount of "収入-投資収入-配当金" has a sign that does not match its income kind',
+        'Cannot aggregate an amount that contradicts the income kind of "収入-投資収入-配当金"',
       );
     });
 
@@ -264,7 +264,7 @@ describe("aggregateByCategory", () => {
       ];
 
       expect(() => aggregate(transactions, "expense")).toThrow(
-        'The amount of "支出-食費-食料品" has a sign that does not match its expense kind',
+        'Cannot aggregate an amount that contradicts the expense kind of "支出-食費-食料品"',
       );
     });
 
@@ -364,7 +364,7 @@ describe("aggregateByCategory", () => {
           catalogByWording(transactions, []),
           ja.vocabulary.otherGroup,
         ),
-      ).toThrow("収入-投資収入-配当金");
+      ).toThrow('Cannot aggregate a non-finite amount for "収入-投資収入-配当金"');
     });
   });
 
