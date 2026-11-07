@@ -32,6 +32,12 @@ describe("parsePeriod", () => {
     expect(parsePeriod("2025-01-00", "2025-12-31")).toBeNull();
   });
 
+  it("Rejects years before 0100", () => {
+    expect(parsePeriod("0001-01-01", "2025-12-31")).toBeNull();
+    expect(parsePeriod("0099-12-31", "2025-12-31")).toBeNull();
+    expect(parsePeriod("0100-01-01", "2025-12-31")).not.toBeNull();
+  });
+
   it("Rejects text that is not in yyyy-MM-dd form", () => {
     expect(parsePeriod("Jan 5 2025", "2025-12-31")).toBeNull();
     expect(parsePeriod("2025-01-01", "Dec 31 2025")).toBeNull();

@@ -272,6 +272,9 @@ const setCurrentYearPeriod = (): void => {
   setStatisticsPeriod(period.startDate, period.endDate, title);
 };
 
+const describeInput = (value: unknown): string =>
+  typeof value === "string" ? `string(${value.length})` : typeof value;
+
 /**
  * Sets a custom period
  */
@@ -281,7 +284,7 @@ const setCustomPeriod = (startDate: string, endDate: string): void => {
   const period = parsePeriod(startDate, endDate);
 
   if (!period) {
-    console.error("Rejected the custom period:", startDate, endDate);
+    console.error("Rejected the custom period:", describeInput(startDate), describeInput(endDate));
     ui.alert(alerts.errorTitle, alerts.invalidDate, ui.ButtonSet.OK);
     return;
   }
