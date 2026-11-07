@@ -12,7 +12,7 @@ const manifest = JSON.parse(
 ) as { oauthScopes?: string[] };
 
 describe("authorization scopes", () => {
-  it("are declared explicitly, so Apps Script does not infer broad spreadsheet access", () => {
+  it("are declared explicitly", () => {
     expect(manifest.oauthScopes).toBeInstanceOf(Array);
     expect(manifest.oauthScopes?.length).toBeGreaterThan(0);
   });
