@@ -13,6 +13,7 @@ import type { ConfigObject, ConfigSheetData } from "./features/config/types";
 import { processRawData } from "./features/data/processRawData";
 import { calculatePeriodDates } from "./features/date/calculatePeriodDates";
 import { formatDateToString } from "./features/date/formatDateToString";
+import { parsePeriod } from "./features/date/parsePeriod";
 import { buildPeriodDialogHtml } from "./features/dialog/buildPeriodDialogHtml";
 import { getOrCreateInputSheet } from "./features/input/getOrCreateInputSheet";
 import { detectLocale } from "./features/locale/detectLocale";
@@ -271,27 +272,33 @@ const setCurrentYearPeriod = (): void => {
   setStatisticsPeriod(period.startDate, period.endDate, title);
 };
 
+const describeInput = (value: unknown): string =>
+  typeof value === "string" ? `string(${value.length})` : typeof value;
+
 /**
  * Sets a custom period
  */
 const setCustomPeriod = (startDate: string, endDate: string): void => {
+  const ui = SpreadsheetApp.getUi();
+  const { alerts, titles } = getActiveLocale();
+  const period = parsePeriod(startDate, endDate);
+
+  if (!period) {
+    console.error("Rejected the custom period:", describeInput(startDate), describeInput(endDate));
+    ui.alert(alerts.errorTitle, alerts.invalidDate, ui.ButtonSet.OK);
+    return;
+  }
+
   try {
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
-
-    // Check that the dates are valid
-    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-      throw new Error("Invalid date format");
-    }
-
-    const title = getActiveLocale().titles.range(startDate, endDate);
-
-    setStatisticsPeriod(startDate, endDate, title);
+    const title = titles.range(period.startDate, period.endDate);
+    setStatisticsPeriod(period.startDate, period.endDate, title);
   } catch (error) {
     console.error("Failed to set the custom period:", error);
-    const ui = SpreadsheetApp.getUi();
-    const { alerts } = getActiveLocale();
-    ui.alert(alerts.errorTitle, alerts.invalidDate, ui.ButtonSet.OK);
+    ui.alert(
+      alerts.errorTitle,
+      error instanceof Error ? error.message : String(error),
+      ui.ButtonSet.OK,
+    );
   }
 };
 
