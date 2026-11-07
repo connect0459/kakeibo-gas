@@ -35,6 +35,7 @@ const emptyAggregation = (): CategoryAggregation => Object.create(null);
  * @param catalog - Categories of the config sheet, with their kind and exclusion flag
  * @param otherGroup - Group to use when the category name is empty
  * @returns Aggregation result by category
+ * @throws When an amount is negative or not a number, which the sheet readers never produce
  *
  * @example
  * ```typescript
@@ -72,10 +73,14 @@ export const aggregateByCategory = (
     const mainCategory = getCategoryMainGroup(item.category, otherGroup);
     const amount = kind === "income" ? item.income : item.expense;
 
-    // Aggregate only when the amount is valid and greater than 0
-    if (mainCategory && !Number.isNaN(amount) && amount > 0) {
-      result[mainCategory] = (result[mainCategory] ?? 0) + amount;
+    if (!(amount >= 0)) {
+      throw new Error(`Cannot aggregate a negative or non-numeric amount for "${item.category}"`);
     }
+    if (!mainCategory || amount === 0) {
+      continue;
+    }
+
+    result[mainCategory] = (result[mainCategory] ?? 0) + amount;
   }
 
   return result;

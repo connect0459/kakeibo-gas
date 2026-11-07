@@ -29,7 +29,7 @@ describe("getArchiveData", () => {
       return null;
     }) as typeof mockSpreadsheet.getSheetByName;
 
-    getArchiveData(mockSpreadsheet, en.sheets.archive, TOKYO);
+    getArchiveData(mockSpreadsheet, en.sheets.archive, TOKYO, en.alerts.invalidAmount);
 
     expect(requestedNames).toEqual(["Archive"]);
   });
@@ -50,7 +50,12 @@ describe("getArchiveData", () => {
       }) as GoogleAppsScript.Spreadsheet.Range;
 
     // When: retrieving the data
-    const result = getArchiveData(mockSpreadsheet, ja.sheets.archive, TOKYO);
+    const result = getArchiveData(
+      mockSpreadsheet,
+      ja.sheets.archive,
+      TOKYO,
+      en.alerts.invalidAmount,
+    );
 
     // Then: 3 TransactionData records excluding the header row are returned
     expect(result).toHaveLength(3);
@@ -85,7 +90,12 @@ describe("getArchiveData", () => {
       }) as GoogleAppsScript.Spreadsheet.Range;
 
     // When: retrieving the data
-    const result = getArchiveData(mockSpreadsheet, ja.sheets.archive, TOKYO);
+    const result = getArchiveData(
+      mockSpreadsheet,
+      ja.sheets.archive,
+      TOKYO,
+      en.alerts.invalidAmount,
+    );
 
     // Then: an empty array is returned
     expect(result).toEqual([]);
@@ -105,7 +115,12 @@ describe("getArchiveData", () => {
       }) as GoogleAppsScript.Spreadsheet.Range;
 
     // When: retrieving the data
-    const result = getArchiveData(mockSpreadsheet, ja.sheets.archive, TOKYO);
+    const result = getArchiveData(
+      mockSpreadsheet,
+      ja.sheets.archive,
+      TOKYO,
+      en.alerts.invalidAmount,
+    );
 
     // Then: only columns A to F are retrieved (columns G onward are ignored)
     expect(result).toHaveLength(1);
@@ -124,7 +139,12 @@ describe("getArchiveData", () => {
     mockSpreadsheet.getSheetByName = () => null;
 
     // When: retrieving the data
-    const result = getArchiveData(mockSpreadsheet, ja.sheets.archive, TOKYO);
+    const result = getArchiveData(
+      mockSpreadsheet,
+      ja.sheets.archive,
+      TOKYO,
+      en.alerts.invalidAmount,
+    );
 
     // Then: an empty array is returned
     expect(result).toEqual([]);
@@ -135,7 +155,12 @@ describe("getArchiveData", () => {
     mockArchiveSheet.getLastRow = () => 0;
 
     // When: retrieving the data
-    const result = getArchiveData(mockSpreadsheet, ja.sheets.archive, TOKYO);
+    const result = getArchiveData(
+      mockSpreadsheet,
+      ja.sheets.archive,
+      TOKYO,
+      en.alerts.invalidAmount,
+    );
 
     // Then: an empty array is returned
     expect(result).toEqual([]);
@@ -151,8 +176,48 @@ describe("getArchiveData", () => {
         ],
       }) as GoogleAppsScript.Spreadsheet.Range;
 
-    const result = getArchiveData(mockSpreadsheet, en.sheets.archive, "America/Los_Angeles");
+    const result = getArchiveData(
+      mockSpreadsheet,
+      en.sheets.archive,
+      "America/Los_Angeles",
+      en.alerts.invalidAmount,
+    );
 
     expect(result[0].date).toEqual(startOfDayInZone("America/Los_Angeles", 2025, 3, 1));
+  });
+  describe("Amount rules shared with the input sheet", () => {
+    const archiveWith = (rows: unknown[][]) => {
+      const mockData = [["日付", "分類", "科目", "摘要", "収入", "支出"], ...rows];
+      mockArchiveSheet.getLastRow = () => mockData.length;
+      mockArchiveSheet.getDataRange = () =>
+        ({ getValues: () => mockData }) as GoogleAppsScript.Spreadsheet.Range;
+    };
+
+    test("Amount text with a thousands separator counts as the same amount as on the input sheet", () => {
+      archiveWith([["2024-01-15", "現金", "食費", "ランチ", "", "1,000"]]);
+
+      const result = getArchiveData(
+        mockSpreadsheet,
+        en.sheets.archive,
+        TOKYO,
+        en.alerts.invalidAmount,
+      );
+
+      expect(result[0]).toMatchObject({ expense: 1000, total: -1000 });
+    });
+
+    test.each(["(1,000)", "▲500", "−500", "1e3", "-500", "abc"])(
+      "Amount %s is rejected with an error naming the sheet and the row",
+      (text) => {
+        archiveWith([
+          ["2024-01-15", "現金", "食費", "ランチ", 0, 800],
+          ["2024-01-16", "現金", "食費", "夕食", 0, text],
+        ]);
+
+        expect(() =>
+          getArchiveData(mockSpreadsheet, en.sheets.archive, TOKYO, en.alerts.invalidAmount),
+        ).toThrow(en.alerts.invalidAmount("Archive", 3));
+      },
+    );
   });
 });

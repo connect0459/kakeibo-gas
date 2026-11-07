@@ -1,5 +1,6 @@
 import { STATIC_CONFIG } from "../../config";
 import type { TransactionData } from "../../types";
+import { parseAmount } from "../amount/parseAmount";
 import { parseDateInZone } from "../date/parseDateInZone";
 
 /**
@@ -8,12 +9,14 @@ import { parseDateInZone } from "../date/parseDateInZone";
  * @param ss - Spreadsheet object
  * @param archiveSheetName - Name of the archive sheet
  * @param timeZone - IANA time zone in which a text date is read
+ * @param describeInvalidAmount - Error message for an amount that is negative or not a plain number
  * @returns Array of all transaction data (no period filter)
  */
 export const getArchiveData = (
   ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
   archiveSheetName: string,
   timeZone: string,
+  describeInvalidAmount: (sheetName: string, row: number) => string,
 ): TransactionData[] => {
   const archiveSheet = ss.getSheetByName(archiveSheetName);
 
@@ -33,7 +36,7 @@ export const getArchiveData = (
   const allData = archiveSheet.getDataRange().getValues();
 
   // Convert to TransactionData excluding the header row
-  return allData.slice(1).map((row) => {
+  return allData.slice(1).map((row, index) => {
     const rawDate = row[STATIC_CONFIG.ARCHIVE_COLUMNS.DATE];
     let date: Date;
     if (rawDate instanceof Date) {
@@ -43,8 +46,11 @@ export const getArchiveData = (
     } else {
       date = new Date(rawDate);
     }
-    const income = Number(row[STATIC_CONFIG.ARCHIVE_COLUMNS.INCOME]) || 0;
-    const expense = Number(row[STATIC_CONFIG.ARCHIVE_COLUMNS.EXPENSE]) || 0;
+    const income = parseAmount(row[STATIC_CONFIG.ARCHIVE_COLUMNS.INCOME]);
+    const expense = parseAmount(row[STATIC_CONFIG.ARCHIVE_COLUMNS.EXPENSE]);
+    if (income === null || expense === null) {
+      throw new Error(describeInvalidAmount(archiveSheetName, index + 2));
+    }
 
     return {
       date,

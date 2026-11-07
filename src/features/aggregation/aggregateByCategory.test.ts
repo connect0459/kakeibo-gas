@@ -220,27 +220,36 @@ describe("aggregateByCategory", () => {
       expect(result.投資収入).toBeUndefined();
     });
 
-    test("Negative amounts are excluded from aggregation", () => {
-      // Arrange
+    test("A category whose group name is empty is not aggregated", () => {
       const transactions: TransactionData[] = [
         createTransaction("収入-給与-本給", 300000, 0),
-        createTransaction("収入-投資収入-配当金", -1000, 0), // Negative amount
+        createTransaction("収入-", 1000, 0),
       ];
-      const excludedCategories: string[] = [];
 
-      // Act
       const result = aggregateByCategory(
         transactions,
         "income",
-        catalogByWording(transactions, excludedCategories),
+        catalogByWording(transactions, []),
         ja.vocabulary.otherGroup,
       );
 
-      // Assert: negative amounts are not aggregated
-      expect(result).toEqual({
-        給与: 300000,
-      });
-      expect(result.投資収入).toBeUndefined();
+      expect(result).toEqual({ 給与: 300000 });
+    });
+
+    test("A negative amount is rejected instead of being dropped", () => {
+      const transactions: TransactionData[] = [
+        createTransaction("収入-給与-本給", 300000, 0),
+        createTransaction("収入-投資収入-配当金", -1000, 0),
+      ];
+
+      expect(() =>
+        aggregateByCategory(
+          transactions,
+          "income",
+          catalogByWording(transactions, []),
+          ja.vocabulary.otherGroup,
+        ),
+      ).toThrow("Cannot aggregate");
     });
   });
 
@@ -308,28 +317,20 @@ describe("aggregateByCategory", () => {
       expect(result.その他).toBeUndefined();
     });
 
-    test("NaN amounts are excluded from aggregation", () => {
-      // Arrange
+    test("A non-numeric amount is rejected instead of being dropped", () => {
       const transactions: TransactionData[] = [
         createTransaction("収入-給与-本給", 300000, 0),
-        // biome-ignore lint/suspicious/noExplicitAny: bypass type checking for testing
-        createTransaction("収入-投資収入-配当金", Number.NaN as any, 0),
+        createTransaction("収入-投資収入-配当金", Number.NaN, 0),
       ];
-      const excludedCategories: string[] = [];
 
-      // Act
-      const result = aggregateByCategory(
-        transactions,
-        "income",
-        catalogByWording(transactions, excludedCategories),
-        ja.vocabulary.otherGroup,
-      );
-
-      // Assert: NaN is not aggregated
-      expect(result).toEqual({
-        給与: 300000,
-      });
-      expect(result.投資収入).toBeUndefined();
+      expect(() =>
+        aggregateByCategory(
+          transactions,
+          "income",
+          catalogByWording(transactions, []),
+          ja.vocabulary.otherGroup,
+        ),
+      ).toThrow("Cannot aggregate");
     });
   });
 

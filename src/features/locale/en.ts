@@ -87,6 +87,8 @@ export const en: Locale = {
     initializeFailed: (message) => `An error occurred while resetting: ${message}`,
     summaryFailed: (message) => `An error occurred while summarizing: ${message}`,
     sheetNotFound: (sheetName) => `The sheet "${sheetName}" was not found.`,
+    invalidAmount: (sheetName, row) =>
+      `Invalid amount in sheet "${sheetName}", row ${row}. Enter a non-negative number such as 1000 or 1,000.`,
     categoriesWithoutKind: (kindColumn, categories) =>
       `These categories in the config sheet have no valid "${kindColumn}" value: ${categories.join(", ")}`,
     categoriesNotListed: (categories) =>
