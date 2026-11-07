@@ -17,6 +17,7 @@ import { buildPeriodDialogHtml } from "./features/dialog/buildPeriodDialogHtml";
 import { getOrCreateInputSheet } from "./features/input/getOrCreateInputSheet";
 import { detectLocale } from "./features/locale/detectLocale";
 import type { Locale } from "./features/locale/types";
+import { runExclusively } from "./features/lock/runExclusively";
 import { displayResults } from "./features/result/displayResults";
 import { isWithinThrottleWindow } from "./features/throttle/isWithinThrottleWindow";
 import type { CategoryAggregation, SectionPosition } from "./types";
@@ -42,6 +43,35 @@ const getActiveLocale = (): Locale => {
 
 const getActiveTimeZone = (): string =>
   SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+
+const INTERACTIVE_LOCK_WAIT_MS = 30000;
+const TRIGGER_LOCK_WAIT_MS = 0;
+
+let cachedScriptLock: GoogleAppsScript.Lock.Lock | null = null;
+
+const getScriptLock = (): GoogleAppsScript.Lock.Lock => {
+  cachedScriptLock ??= LockService.getScriptLock();
+  return cachedScriptLock;
+};
+
+const runWithScriptLock = <T>(waitMs: number, work: () => T) =>
+  runExclusively(getScriptLock(), waitMs, work);
+
+type Notice = { title: string; body: string };
+
+const runInteractively = (work: () => Notice | undefined): void => {
+  const ui = SpreadsheetApp.getUi();
+  const { alerts } = getActiveLocale();
+  const outcome = runWithScriptLock(INTERACTIVE_LOCK_WAIT_MS, work);
+  if (!outcome.ran) {
+    console.log("Skipped because another run holds the script lock");
+    ui.alert(alerts.infoTitle, alerts.busy, ui.ButtonSet.OK);
+    return;
+  }
+  if (outcome.value !== undefined) {
+    ui.alert(outcome.value.title, outcome.value.body, ui.ButtonSet.OK);
+  }
+};
 
 /**
  * Reads data from the config sheet (with caching)
@@ -173,7 +203,7 @@ const getInputSheet = () =>
  * @param endDate - End date
  * @param title - Sheet title
  */
-const setStatisticsPeriod = (
+const applyStatisticsPeriod = (
   startDate: string | Date,
   endDate: string | Date,
   title: string,
@@ -191,15 +221,33 @@ const setStatisticsPeriod = (
   runAggregation();
 };
 
-/**
- * Sets the current month's period
- */
-const setCurrentMonthPeriod = (): void => {
+const setStatisticsPeriod = (
+  startDate: string | Date,
+  endDate: string | Date,
+  title: string,
+): void => {
+  runInteractively(() => {
+    applyStatisticsPeriod(startDate, endDate, title);
+    return undefined;
+  });
+};
+
+const applyCurrentMonthPeriod = (): void => {
   const period = calculatePeriodDates(getActiveTimeZone(), 0, 0);
   const [year, month] = period.startDate.split("-").map(Number);
   const title = getActiveLocale().titles.month(year, month);
 
-  setStatisticsPeriod(period.startDate, period.endDate, title);
+  applyStatisticsPeriod(period.startDate, period.endDate, title);
+};
+
+/**
+ * Sets the current month's period
+ */
+const setCurrentMonthPeriod = (): void => {
+  runInteractively(() => {
+    applyCurrentMonthPeriod();
+    return undefined;
+  });
 };
 
 /**
@@ -264,62 +312,59 @@ const archivePreviousMonthData = (): void => {
       return;
     }
 
-    const timeZone = getActiveTimeZone();
+    runInteractively(() => {
+      const timeZone = getActiveTimeZone();
 
-    // Get this month's date
-    const thisMonth = calculatePeriodDates(timeZone, 0, 0);
-    const thisMonthStartDate = thisMonth.startDateObj;
+      // Get this month's date
+      const thisMonth = calculatePeriodDates(timeZone, 0, 0);
+      const thisMonthStartDate = thisMonth.startDateObj;
 
-    // Get the input sheet and the archive sheet
-    const inputSheet = getInputSheet();
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const locale = getActiveLocale();
-    const archiveSheet = getOrCreateArchiveSheet(ss, locale.sheets.archive, locale.headers);
+      // Get the input sheet and the archive sheet
+      const inputSheet = getInputSheet();
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const locale = getActiveLocale();
+      const archiveSheet = getOrCreateArchiveSheet(ss, locale.sheets.archive, locale.headers);
 
-    // Get the input sheet data (columns A to F only)
-    const lastRow = inputSheet.getLastRow();
-    if (lastRow <= 1) {
-      ui.alert(alerts.infoTitle, alerts.noInputData, ui.ButtonSet.OK);
-      return;
-    }
+      // Get the input sheet data (columns A to F only)
+      const lastRow = inputSheet.getLastRow();
+      if (lastRow <= 1) {
+        return { title: alerts.infoTitle, body: alerts.noInputData };
+      }
 
-    const inputRange = inputSheet.getRange(
-      2,
-      1,
-      lastRow - 1,
-      STATIC_CONFIG.TRANSACTION_COLUMN_COUNT,
-    );
-    const inputData = inputRange.getValues();
-    const formulas = inputRange.getFormulas();
-    const plan = planArchive(inputData, thisMonthStartDate, timeZone, {
-      carryoverCategory: locale.vocabulary.carryoverCategory,
-      describeCarryover: locale.vocabulary.carryoverDescription,
+      const inputRange = inputSheet.getRange(
+        2,
+        1,
+        lastRow - 1,
+        STATIC_CONFIG.TRANSACTION_COLUMN_COUNT,
+      );
+      const inputData = inputRange.getValues();
+      const formulas = inputRange.getFormulas();
+      const plan = planArchive(inputData, thisMonthStartDate, timeZone, {
+        carryoverCategory: locale.vocabulary.carryoverCategory,
+        describeCarryover: locale.vocabulary.carryoverDescription,
+      });
+
+      // When there is no data to move
+      if (plan.pastRowCount === 0) {
+        return { title: alerts.infoTitle, body: alerts.noPastData };
+      }
+
+      if (plan.rowsToArchive.length === 0) {
+        return { title: alerts.infoTitle, body: alerts.nothingToArchive };
+      }
+
+      commitArchive({
+        inputSheet,
+        archiveSheet,
+        values: inputData,
+        formulas,
+        plan,
+      });
+
+      applyCurrentMonthPeriod();
+
+      return { title: alerts.doneTitle, body: alerts.archived(plan.rowsToArchive.length) };
     });
-
-    // When there is no data to move
-    if (plan.pastRowCount === 0) {
-      ui.alert(alerts.infoTitle, alerts.noPastData, ui.ButtonSet.OK);
-      return;
-    }
-
-    if (plan.rowsToArchive.length === 0) {
-      ui.alert(alerts.infoTitle, alerts.nothingToArchive, ui.ButtonSet.OK);
-      return;
-    }
-
-    commitArchive({
-      inputSheet,
-      archiveSheet,
-      values: inputData,
-      formulas,
-      plan,
-    });
-
-    // Completion message
-    ui.alert(alerts.doneTitle, alerts.archived(plan.rowsToArchive.length), ui.ButtonSet.OK);
-
-    // Update the aggregation
-    setCurrentMonthPeriod();
   } catch (error) {
     console.error("Failed to archive the data:", error);
     const ui = SpreadsheetApp.getUi();
@@ -346,15 +391,19 @@ const initializeInputSheet = (): void => {
       return;
     }
 
-    const inputSheet = getInputSheet();
+    runInteractively(() => {
+      const inputSheet = getInputSheet();
 
-    // Clear data other than the header row (columns A to F only)
-    const lastRow = inputSheet.getLastRow();
-    if (lastRow > 1) {
-      inputSheet.getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT).clearContent();
-    }
+      // Clear data other than the header row (columns A to F only)
+      const lastRow = inputSheet.getLastRow();
+      if (lastRow > 1) {
+        inputSheet
+          .getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT)
+          .clearContent();
+      }
 
-    ui.alert(alerts.doneTitle, alerts.initialized, ui.ButtonSet.OK);
+      return { title: alerts.doneTitle, body: alerts.initialized };
+    });
   } catch (error) {
     console.error("Failed to initialize the input sheet:", error);
     const ui = SpreadsheetApp.getUi();
@@ -608,12 +657,17 @@ const THROTTLE_WINDOW_MS = 10000;
 const THROTTLE_CACHE_SECONDS = 60;
 
 const generateStatistics = (_e?: unknown): void => {
-  const cache = CacheService.getScriptCache();
-  if (isWithinThrottleWindow(cache.get(THROTTLE_CACHE_KEY), Date.now(), THROTTLE_WINDOW_MS)) {
-    console.log("Skipped because it ran recently");
-    return;
+  const outcome = runWithScriptLock(TRIGGER_LOCK_WAIT_MS, () => {
+    const cache = CacheService.getScriptCache();
+    if (isWithinThrottleWindow(cache.get(THROTTLE_CACHE_KEY), Date.now(), THROTTLE_WINDOW_MS)) {
+      console.log("Skipped because it ran recently");
+      return;
+    }
+    runAggregation();
+  });
+  if (!outcome.ran) {
+    console.log("Skipped because another run holds the script lock");
   }
-  runAggregation();
 };
 
 const runAggregation = (): void => {
@@ -628,8 +682,8 @@ const runAggregation = (): void => {
     if (!resultSheet) {
       resultSheet = getOrCreateResultSheet();
       // Set the initial period
-      setCurrentMonthPeriod();
-      return; // runAggregation is called inside setCurrentMonthPeriod, so finish here
+      applyCurrentMonthPeriod();
+      return;
     }
 
     // Get the aggregation period

@@ -82,6 +82,7 @@ export const ja: Locale = {
     initializeConfirmTitle: "入力シートの初期化",
     initializeConfirmBody: "すべてのデータが削除されます。この操作は元に戻せません。続行しますか？",
     initialized: "入力シートを初期化しました。",
+    busy: "別の処理を実行中です。しばらくしてからもう一度お試しください。",
     archiveFailed: (message) => `アーカイブ処理中にエラーが発生しました: ${message}`,
     initializeFailed: (message) => `初期化中にエラーが発生しました: ${message}`,
     summaryFailed: (message) => `集計処理中にエラーが発生しました: ${message}`,
