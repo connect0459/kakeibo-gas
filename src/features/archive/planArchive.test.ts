@@ -32,7 +32,7 @@ describe("planArchive", () => {
       const plan = planArchive([past, current], THIS_MONTH_START, TOKYO, labels);
 
       expect(plan.rowsToArchive).toEqual([past]);
-      expect(plan.rowsToKeep).toEqual([current]);
+      expect(plan.keptRows).toEqual([{ index: 1, row: current }]);
     });
 
     it("treats the first day of this month as this month", () => {
@@ -40,7 +40,7 @@ describe("planArchive", () => {
 
       const plan = planArchive([first], THIS_MONTH_START, TOKYO, labels);
 
-      expect(plan.rowsToKeep).toEqual([first]);
+      expect(plan.keptRows).toEqual([{ index: 0, row: first }]);
       expect(plan.pastRowCount).toBe(0);
     });
 
@@ -51,7 +51,7 @@ describe("planArchive", () => {
 
       const plan = planArchive([first], monthStart, auckland, labels);
 
-      expect(plan.rowsToKeep).toEqual([first]);
+      expect(plan.keptRows).toEqual([{ index: 0, row: first }]);
       expect(plan.pastRowCount).toBe(0);
     });
 
@@ -72,11 +72,25 @@ describe("planArchive", () => {
       expect(plan.pastRowCount).toBe(1);
     });
 
+    it("keeps each kept row at the position it had in the input", () => {
+      const past = row(SEPTEMBER, "Cash", "Expense-Food", "lunch", "", 800);
+      const current = row(OCTOBER, "Cash", "Expense-Food", "dinner", "", 1200);
+
+      const plan = planArchive(
+        [BLANK_ROW, past, BLANK_ROW, current],
+        THIS_MONTH_START,
+        TOKYO,
+        labels,
+      );
+
+      expect(plan.keptRows).toEqual([{ index: 3, row: current }]);
+    });
+
     it("drops blank rows from both sides", () => {
       const plan = planArchive([BLANK_ROW], THIS_MONTH_START, TOKYO, labels);
 
       expect(plan.rowsToArchive).toEqual([]);
-      expect(plan.rowsToKeep).toEqual([]);
+      expect(plan.keptRows).toEqual([]);
       expect(plan.carryForwardRows).toEqual([]);
     });
 
@@ -85,7 +99,7 @@ describe("planArchive", () => {
 
       const plan = planArchive([undated], THIS_MONTH_START, TOKYO, labels);
 
-      expect(plan.rowsToKeep).toEqual([undated]);
+      expect(plan.keptRows).toEqual([{ index: 0, row: undated }]);
       expect(plan.pastRowCount).toBe(0);
     });
   });
