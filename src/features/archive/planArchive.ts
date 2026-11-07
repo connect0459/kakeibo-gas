@@ -15,6 +15,7 @@ export type ArchivePlan = {
   pastRowCount: number;
   rowsToArchive: unknown[][];
   keptRows: KeptRow[];
+  archivedIndexes: number[];
   carryForwardRows: unknown[][];
 };
 
@@ -72,6 +73,7 @@ export const planArchive = (
   const thisMonthStartText = formatDateToString(thisMonthStart, timeZone);
   const balanceByType = new Map<string, number>();
   const rowsToMove: unknown[][] = [];
+  const archivedIndexes: number[] = [];
   const keptRows: KeptRow[] = [];
 
   for (const { index, row } of inheritDateAndType(inputRows)) {
@@ -90,6 +92,8 @@ export const planArchive = (
       keptRows.push({ index, row });
       continue;
     }
+
+    archivedIndexes.push(index);
 
     if (type) {
       const income = Number.parseFloat(String(row[COLUMN.INCOME] || 0));
@@ -124,6 +128,7 @@ export const planArchive = (
     pastRowCount: rowsToMove.length,
     rowsToArchive: filterZeroRecords(rowsToMove),
     keptRows,
+    archivedIndexes,
     carryForwardRows,
   };
 };

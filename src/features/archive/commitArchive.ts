@@ -1,7 +1,8 @@
+import { STATIC_CONFIG } from "../../config";
 import { layoutInputBlock } from "./layoutInputBlock";
 import type { ArchivePlan } from "./planArchive";
 
-const COLUMN_COUNT = 6;
+const COLUMN_COUNT = STATIC_CONFIG.TRANSACTION_COLUMN_COUNT;
 
 const lastUsedRow = (sheet: GoogleAppsScript.Spreadsheet.Sheet): number => {
   const column = sheet.getRange(1, 1, sheet.getMaxRows(), 1).getValues();
@@ -26,6 +27,7 @@ export const commitArchive = (params: {
 
   const block = layoutInputBlock({
     keptRows: plan.keptRows,
+    archivedIndexes: plan.archivedIndexes,
     carryForwardRows: plan.carryForwardRows,
     formulas,
   });
@@ -35,7 +37,11 @@ export const commitArchive = (params: {
   try {
     inputSheet.getRange(2, 1, block.length, COLUMN_COUNT).setValues(block);
   } catch (error) {
-    archiveSheet.getRange(insertRow, 1, appended, COLUMN_COUNT).clearContent();
+    try {
+      archiveSheet.getRange(insertRow, 1, appended, COLUMN_COUNT).clearContent();
+    } catch (rollbackError) {
+      console.error("Failed to remove the rows appended to the archive sheet:", rollbackError);
+    }
     throw error;
   }
 };

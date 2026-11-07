@@ -283,7 +283,12 @@ const archivePreviousMonthData = (): void => {
       return;
     }
 
-    const inputRange = inputSheet.getRange(2, 1, lastRow - 1, 6);
+    const inputRange = inputSheet.getRange(
+      2,
+      1,
+      lastRow - 1,
+      STATIC_CONFIG.TRANSACTION_COLUMN_COUNT,
+    );
     const inputData = inputRange.getValues();
     const formulas = inputRange.getFormulas();
     const plan = planArchive(inputData, thisMonthStartDate, timeZone, {
@@ -345,7 +350,7 @@ const initializeInputSheet = (): void => {
     // Clear data other than the header row (columns A to F only)
     const lastRow = inputSheet.getLastRow();
     if (lastRow > 1) {
-      inputSheet.getRange(2, 1, lastRow - 1, 6).clearContent();
+      inputSheet.getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT).clearContent();
     }
 
     ui.alert(alerts.doneTitle, alerts.initialized, ui.ButtonSet.OK);
@@ -482,7 +487,9 @@ const getInputData = () => {
     return [];
   }
 
-  const data = inputSheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  const data = inputSheet
+    .getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT)
+    .getValues();
   return processRawData(data);
 };
 

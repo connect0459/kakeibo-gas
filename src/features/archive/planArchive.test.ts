@@ -86,6 +86,16 @@ describe("planArchive", () => {
       expect(plan.keptRows).toEqual([{ index: 3, row: current }]);
     });
 
+    it("reports the positions of the rows it moves, including rows that are not written to the archive", () => {
+      const past = row(SEPTEMBER, "Cash", "Expense-Food", "lunch", "", 800);
+      const zero = row(SEPTEMBER, "Cash", "Expense-Food", "none", 0, 0);
+      const current = row(OCTOBER, "Cash", "Expense-Food", "dinner", "", 1200);
+
+      const plan = planArchive([past, BLANK_ROW, zero, current], THIS_MONTH_START, TOKYO, labels);
+
+      expect(plan.archivedIndexes).toEqual([0, 2]);
+    });
+
     it("drops blank rows from both sides", () => {
       const plan = planArchive([BLANK_ROW], THIS_MONTH_START, TOKYO, labels);
 
@@ -130,6 +140,15 @@ describe("planArchive", () => {
       const plan = planArchive([dated, undated], THIS_MONTH_START, TOKYO, labels);
 
       expect(plan.pastRowCount).toBe(2);
+    });
+
+    it("writes an inherited date into a kept row that left it blank", () => {
+      const dated = row(OCTOBER, "Cash", "Expense-Food", "dinner", "", 1200);
+      const undated = row("", "", "Expense-Food", "snack", "", 200);
+
+      const plan = planArchive([dated, undated], THIS_MONTH_START, TOKYO, labels);
+
+      expect(plan.keptRows[1].row.slice(0, 2)).toEqual([OCTOBER, "Cash"]);
     });
 
     it("does not modify the rows it was given", () => {

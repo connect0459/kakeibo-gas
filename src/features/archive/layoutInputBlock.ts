@@ -1,30 +1,30 @@
+import { STATIC_CONFIG } from "../../config";
 import type { KeptRow } from "./planArchive";
-
-const COLUMN_COUNT = 6;
-
-const blankRow = (): unknown[] => new Array(COLUMN_COUNT).fill("");
 
 const withFormulas = (row: readonly unknown[], formulas: readonly string[]): unknown[] =>
   row.map((value, column) => (formulas[column] ? formulas[column] : value));
 
+const formulasOnly = (formulas: readonly string[]): unknown[] =>
+  Array.from(
+    { length: STATIC_CONFIG.TRANSACTION_COLUMN_COUNT },
+    (_, column) => formulas[column] ?? "",
+  );
+
 export const layoutInputBlock = (params: {
   keptRows: readonly KeptRow[];
+  archivedIndexes: readonly number[];
   carryForwardRows: readonly unknown[][];
   formulas: readonly (readonly string[])[];
 }): unknown[][] => {
-  const { keptRows, carryForwardRows, formulas } = params;
-  const block: unknown[][] = formulas.map(blankRow);
-  const occupied = new Set<number>();
+  const { keptRows, archivedIndexes, carryForwardRows, formulas } = params;
+  const block = formulas.map(formulasOnly);
 
   for (const { index, row } of keptRows) {
-    block[index] = withFormulas(row, formulas[index] ?? []);
-    occupied.add(index);
+    block[index] = withFormulas(row, formulas[index]);
   }
 
-  const vacated = block.map((_, index) => index).filter((index) => !occupied.has(index));
   const pending = [...carryForwardRows];
-
-  for (const index of vacated) {
+  for (const index of [...archivedIndexes].sort((a, b) => a - b)) {
     const carry = pending.shift();
     if (!carry) {
       break;
