@@ -220,6 +220,22 @@ describe("aggregateByCategory", () => {
       expect(result.投資収入).toBeUndefined();
     });
 
+    test("A category whose group name is empty is not aggregated", () => {
+      const transactions: TransactionData[] = [
+        createTransaction("収入-給与-本給", 300000, 0),
+        createTransaction("収入-", 1000, 0),
+      ];
+
+      const result = aggregateByCategory(
+        transactions,
+        "income",
+        catalogByWording(transactions, []),
+        ja.vocabulary.otherGroup,
+      );
+
+      expect(result).toEqual({ 給与: 300000 });
+    });
+
     test("A negative amount is rejected instead of being dropped", () => {
       const transactions: TransactionData[] = [
         createTransaction("収入-給与-本給", 300000, 0),
