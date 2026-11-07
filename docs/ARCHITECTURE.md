@@ -22,7 +22,8 @@ kakeibo-gas/
 │       ├── dialog/                # buildPeriodDialogHtml
 │       ├── input/                 # getOrCreateInputSheet
 │       ├── locale/                # ja / en dictionaries, resolveLocale, detectLocale
-│       └── result/                # displayResults (summary and category tables)
+│       ├── result/                # displayResults (summary and category tables)
+│       └── throttle/              # isWithinThrottleWindow (edit-trigger throttle decision)
 ├── tests/
 │   ├── __mocks__/                 # Fakes for GAS globals
 │   ├── architecture/              # Source-scanning guard tests
@@ -68,7 +69,7 @@ Boundaries: pure logic lives under `src/features/`; spreadsheet I/O, UI, and com
 | Entry points | Functions assigned to `globalThis` at the bottom of `src/main.ts`; GAS resolves menu items and `google.script.run` calls by global name |
 | `onOpen` | Simple trigger; builds the custom menu |
 | `generateStatistics` | Written to run on spreadsheet edit. The code does not install the trigger (`ScriptApp.newTrigger` is not used), so it must be wired up in the Apps Script project |
-| Throttling | `generateStatistics` skips a run that follows another within 10 seconds, using `CacheService` |
+| Throttling | Only the edit-triggered `generateStatistics` skips a run that follows another within 10 seconds, using `CacheService`, because one change fires repeated edit events. The menu period actions and the refresh after archiving call `runAggregation` directly and always aggregate, then record the run time |
 | Configuration | Nothing is read at script load. `onOpen` creates the config sheet if it is missing; it is read when the aggregation or the input sheet needs its values |
 | `onOpen` failures | `onOpen` builds the menu first and then creates the config sheet. If the config sheet cannot be created, the menu still appears and the failure is only logged with `console.error`; nothing is shown to the user. The config sheet is created again the next time its values are needed |
 
@@ -113,6 +114,7 @@ A single GAS script; each feature below is a directory under `src/features/`.
 | `input` | Create the input sheet: header row, styles, date and amount formats, type dropdown | `getOrCreateInputSheet` | Unit (fake spreadsheet) |
 | `locale` | Text dictionaries (`ja`, `en`) and the rule that picks one for a spreadsheet. `detectLocale` reads a spreadsheet's sheet names and locale and picks the dictionary | No (a minimal spreadsheet interface) | Unit |
 | `result` | Write the summary and the income and expense tables to the result sheet, and return their row ranges | `displayResults` | Unit (fake sheet) |
+| `throttle` | Decide whether a recorded last run is still inside the throttle window | No | Unit |
 
 `src/main.ts` has no tests of its own; the code that creates the input sheet and writes the result tables was moved out so that it is covered (`features/input`, `features/result`). Result sheet creation (`getOrCreateResultSheet`), the charts, and the archive flow still live in `main.ts` untested. `tests/architecture/` scans the production sources and fails on a Japanese string literal outside the `ja` dictionary (only `features/config/defaultConfigRows.ja.ts`, the Japanese default config rows, is exempt). `tests/integration/` combines feature functions (config reading with aggregation, archive sheet creation with archive reading) but does not run `main.ts`. The fake spreadsheet in `src/testing/` keeps one final state per A1 range (value, format, style, validation), so a test can check what a range ended up as but not the order of writes, and a write to an overlapping range is not merged into another.
 
@@ -143,7 +145,7 @@ Input and archive columns: date, type, category, description, income, expense (A
 ### 4.2 Script cache
 
 - **Type**: `CacheService` script cache
-- **Purpose**: Throttle repeated `generateStatistics` runs (key `lastRun_generateStats`, 60 seconds)
+- **Purpose**: Deduplicate edit-triggered aggregation runs (key `lastRun_generateStats`, 60 seconds); explicit actions are never throttled
 
 ## 5. External Integrations / APIs
 

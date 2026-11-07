@@ -17,6 +17,7 @@ import { getOrCreateInputSheet } from "./features/input/getOrCreateInputSheet";
 import { detectLocale } from "./features/locale/detectLocale";
 import type { Locale } from "./features/locale/types";
 import { displayResults } from "./features/result/displayResults";
+import { isWithinThrottleWindow } from "./features/throttle/isWithinThrottleWindow";
 import type { CategoryAggregation, SectionPosition } from "./types";
 
 // Cache of data read from the config sheet
@@ -186,12 +187,7 @@ const setStatisticsPeriod = (
   resultSheet.getRange("A1").setFontSize(16).setFontWeight("bold");
 
   // Run the aggregation immediately
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const e = {
-    source: ss,
-    getActiveSheet: () => ss.getSheetByName(getActiveLocale().sheets.input) || resultSheet,
-  };
-  generateStatistics(e);
+  runAggregation();
 };
 
 /**
@@ -613,24 +609,22 @@ const createCharts = (
   }
 };
 
-/**
- * Function that runs when the spreadsheet is edited
- * Gets the period from the result sheet and aggregates
- */
+const THROTTLE_CACHE_KEY = "lastRun_generateStats";
+const THROTTLE_WINDOW_MS = 10000;
+const THROTTLE_CACHE_SECONDS = 60;
+
 const generateStatistics = (_e?: unknown): void => {
+  const cache = CacheService.getScriptCache();
+  if (isWithinThrottleWindow(cache.get(THROTTLE_CACHE_KEY), Date.now(), THROTTLE_WINDOW_MS)) {
+    console.log("Skipped because it ran recently");
+    return;
+  }
+  runAggregation();
+};
+
+const runAggregation = (): void => {
   try {
-    // Skip if it just ran (wait until the edit is reflected)
     const cache = CacheService.getScriptCache();
-    const lastRunKey = "lastRun_generateStats";
-    const lastRun = cache.get(lastRunKey);
-
-    const now = new Date().getTime();
-    if (lastRun && now - parseInt(lastRun) < 10000) {
-      // Throttle re-runs within 10 seconds
-      console.log("Skipped because it ran recently");
-      return;
-    }
-
     // Get the aggregation period from the result sheet
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const timeZone = getActiveTimeZone();
@@ -641,7 +635,7 @@ const generateStatistics = (_e?: unknown): void => {
       resultSheet = getOrCreateResultSheet();
       // Set the initial period
       setCurrentMonthPeriod();
-      return; // generateStatistics is called inside setCurrentMonthPeriod, so finish here
+      return; // runAggregation is called inside setCurrentMonthPeriod, so finish here
     }
 
     // Get the aggregation period
@@ -680,7 +674,7 @@ const generateStatistics = (_e?: unknown): void => {
     generateStatisticsForPeriod(startDateStr, endDateStr, title);
 
     // Record the last run time
-    cache.put(lastRunKey, now.toString(), 60); // Cache for 60 seconds
+    cache.put(THROTTLE_CACHE_KEY, Date.now().toString(), THROTTLE_CACHE_SECONDS);
     console.log("Aggregation completed");
   } catch (error) {
     console.error("Failed to aggregate:", error);
