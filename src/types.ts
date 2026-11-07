@@ -1,9 +1,4 @@
 /**
- * Object tracking balances per type
- */
-export type BalanceByType = Record<string, number>;
-
-/**
  * Section position information
  */
 export type SectionPosition = {
