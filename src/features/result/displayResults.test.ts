@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { asSheet, FakeSpreadsheet } from "../../testing/fakeSpreadsheet.testing";
+import { aggregateByCategory } from "../aggregation/aggregateByCategory";
+import { catalogByWording } from "../category/catalogByWording.testing";
 import { en } from "../locale/en";
 import { ja } from "../locale/ja";
 import { displayResults } from "./displayResults";
@@ -145,5 +147,32 @@ describe("displayResults", () => {
     const { sheet } = render({ Salary: 100 }, { Food: 50 });
 
     expect(sheet.resizedColumns).toEqual([1, 2, 3]);
+  });
+
+  describe("Group names that collide with built-in object members", () => {
+    test("Shows numeric totals and amounts when groups are named after object members", () => {
+      const transactions = ["constructor", "__proto__", "toString"].map((group) => ({
+        date: new Date("2025-01-01"),
+        type: "cash",
+        category: `Expense-${group}-Parts`,
+        description: "",
+        income: 0,
+        expense: 1000,
+        total: -1000,
+      }));
+      const expense = aggregateByCategory(
+        transactions,
+        "expense",
+        catalogByWording(transactions),
+        en.vocabulary.otherGroup,
+      );
+
+      const { sheet } = render({}, expense, en);
+
+      expect(sheet.state("B7").value).toBe(3000);
+      expect(sheet.state("B8").value).toBe(-3000);
+      const amounts = ["B12", "B13", "B14"].map((a1) => sheet.state(a1).value);
+      expect(amounts).toEqual([1000, 1000, 1000]);
+    });
   });
 });

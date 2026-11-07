@@ -22,6 +22,8 @@ const getCategoryMainGroup = (category: string, otherGroup: string): string => {
   return parts.length > 1 ? parts[1] : parts[0];
 };
 
+const emptyAggregation = (): CategoryAggregation => Object.create(null);
+
 /**
  * Aggregates by category (excluding excluded categories)
  *
@@ -60,7 +62,7 @@ export const aggregateByCategory = (
   catalog: CategoryCatalog,
   otherGroup: string,
 ): CategoryAggregation => {
-  const result: CategoryAggregation = {};
+  const result = emptyAggregation();
 
   for (const item of data) {
     if (catalog.kindOf(item.category) !== kind || catalog.isExcluded(item.category)) {
