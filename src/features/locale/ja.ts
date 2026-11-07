@@ -72,6 +72,7 @@ export const ja: Locale = {
     infoTitle: "情報",
     doneTitle: "完了",
     invalidDate: "無効な日付形式が指定されました。正しい日付を入力してください。",
+    invalidPeriod: "無効な期間が指定されました。B2の開始日をD2の終了日以前に設定してください。",
     archiveConfirmTitle: "過去データのアーカイブ",
     archiveConfirmBody:
       "今月より前のデータをアーカイブシートに移動します。この操作は元に戻せません。続行しますか？",

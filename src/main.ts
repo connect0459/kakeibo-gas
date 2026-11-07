@@ -698,23 +698,28 @@ const runAggregation = (): void => {
     const endDate = resultSheet.getRange("D2").getValue();
 
     // Check that the date is in a valid format
-    let startDateStr: string;
-    let endDateStr: string;
-    if (startDate instanceof Date && !isNaN(startDate.getTime())) {
-      startDateStr = formatDateToString(startDate, timeZone);
-    } else {
-      // Set the first day of this month if it is not a date
-      const period = calculatePeriodDates(timeZone);
-      startDateStr = period.startDate;
-      resultSheet.getRange("B2").setValue(startDateStr);
+    const startIsDate = startDate instanceof Date && !isNaN(startDate.getTime());
+    const endIsDate = endDate instanceof Date && !isNaN(endDate.getTime());
+    const fallbackPeriod = calculatePeriodDates(timeZone);
+    // Fall back to the first day of this month when the start is not a date
+    const startDateStr = startIsDate
+      ? formatDateToString(startDate, timeZone)
+      : fallbackPeriod.startDate;
+    // Fall back to the last day of this month when the end is not a date
+    const endDateStr = endIsDate ? formatDateToString(endDate, timeZone) : fallbackPeriod.endDate;
+
+    if (!parsePeriod(startDateStr, endDateStr)) {
+      console.error("Rejected the result sheet period: start is after end");
+      const ui = SpreadsheetApp.getUi();
+      const { alerts } = getActiveLocale();
+      ui.alert(alerts.errorTitle, alerts.invalidPeriod, ui.ButtonSet.OK);
+      return;
     }
 
-    if (endDate instanceof Date && !isNaN(endDate.getTime())) {
-      endDateStr = formatDateToString(endDate, timeZone);
-    } else {
-      // Set the last day of this month if it is not a date
-      const period = calculatePeriodDates(timeZone);
-      endDateStr = period.endDate;
+    if (!startIsDate) {
+      resultSheet.getRange("B2").setValue(startDateStr);
+    }
+    if (!endIsDate) {
       resultSheet.getRange("D2").setValue(endDateStr);
     }
 

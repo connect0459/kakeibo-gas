@@ -77,6 +77,7 @@ export type Locale = DeepReadonly<{
     infoTitle: string;
     doneTitle: string;
     invalidDate: string;
+    invalidPeriod: string;
     archiveConfirmTitle: string;
     archiveConfirmBody: string;
     noInputData: string;
