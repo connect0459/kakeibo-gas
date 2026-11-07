@@ -46,9 +46,8 @@ export const buildPeriodDialogHtml = (dialog: Locale["dialog"]): string => `
           return;
         }
 
-        google.script.run
-          .withSuccessHandler(() => google.script.host.close())
-          .setCustomPeriod(startDate, endDate);
+        google.script.run.setCustomPeriod(startDate, endDate);
+        google.script.host.close();
       }
     </script>
   `;

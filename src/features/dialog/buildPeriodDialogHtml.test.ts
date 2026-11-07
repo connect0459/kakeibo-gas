@@ -26,6 +26,16 @@ describe("buildPeriodDialogHtml", () => {
     expect(html).toContain(".setCustomPeriod(startDate, endDate)");
   });
 
+  it("closes the dialog right after requesting the period instead of waiting for the aggregation", () => {
+    const html = buildPeriodDialogHtml(en.dialog);
+
+    const requestAt = html.indexOf("setCustomPeriod(startDate, endDate)");
+    const closeAt = html.indexOf("google.script.host.close()");
+
+    expect(requestAt).toBeGreaterThan(-1);
+    expect(closeAt).toBeGreaterThan(requestAt);
+  });
+
   describe("when the text contains characters that are special in HTML or script", () => {
     const hostile: Locale["dialog"] = {
       ...en.dialog,
