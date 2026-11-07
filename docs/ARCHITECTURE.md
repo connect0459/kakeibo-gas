@@ -10,7 +10,7 @@ kakeibo-gas/
 │   ├── main.ts                    # Entry points, menu, dialogs, charts, archive flow, wiring
 │   ├── config.ts                  # STATIC_CONFIG: date format, column indexes, chart sizes
 │   ├── testing/                   # Fakes shared by unit tests (`*.testing.ts`)
-│   ├── types.ts, types/           # Shared types (overlapping definitions, see section 9)
+│   ├── types.ts, types/           # Shared section types (`types.ts`); GAS ambient declarations (`types/global.d.ts`)
 │   └── features/                  # Package by Features
 │       ├── aggregation/           # aggregateByCategory, findUnlistedCategories
 │       ├── archive/               # getArchiveData, getOrCreateArchiveSheet, planArchive, layoutInputBlock, commitArchive, filterZeroRecords
@@ -118,6 +118,8 @@ A single GAS script; each feature below is a directory under `src/features/`.
 | `lock` | Run work only while holding a lock (`tryLock`/`releaseLock`), release it on failure, report a skipped run, and run nested work on a lock this execution already holds without waiting for it | `runExclusively` | Unit (in-memory lock) |
 | `throttle` | Decide whether a recorded last run is still inside the throttle window | No | Unit |
 
+`TransactionData` and `CategoryAggregation` are owned by `features/aggregation/types.ts`. `TransactionData` is the input contract of the aggregation functions, and its producers (`data`, `archive`) conform to it, so the dependency points from producer to consumer and only for types. Do not redeclare either type elsewhere.
+
 `src/main.ts` has no tests of its own; the code that creates the input sheet and writes the result tables was moved out so that it is covered (`features/input`, `features/result`). Result sheet creation (`getOrCreateResultSheet`), the charts, and the archive flow still live in `main.ts` untested. `tests/architecture/` scans the production sources and fails on a Japanese string literal outside the `ja` dictionary (only `features/config/defaultConfigRows.ja.ts`, the Japanese default config rows, is exempt). `tests/integration/` combines feature functions (config reading with aggregation, archive sheet creation with archive reading) but does not run `main.ts`. The fake spreadsheet in `src/testing/` keeps one final state per A1 range (value, format, style, validation), so a test can check what a range ended up as but not the order of writes, and a write to an overlapping range is not merged into another.
 
 ## 4. Data Stores
@@ -193,8 +195,6 @@ Known architectural debt, recorded as facts about the current code rather than c
 - Archiving zeroes the amounts of old carryover rows and the zero-amount filter then drops them, so they never reach the archive sheet; the balance travels in the new carryover rows (pinned by the `planArchive` tests).
 - `main.ts` uses literal column indexes and the literal width `6` instead of the column definitions in `STATIC_CONFIG`.
 - `getArchiveData` and `getOrCreateArchiveSheet` still import `STATIC_CONFIG` for the column definitions and date format; only the sheet names and headers are passed in.
-- `TransactionData` is defined in four places (`src/types.ts`, `src/types/index.ts`, `features/aggregation/types.ts`, `features/data/processRawData.ts`), as both `type` and `interface`.
-- `src/types.ts` shadows `src/types/index.ts`: an import of `"./types"` resolves to the file, so no import reaches the directory's `index.ts`. Both declare `BalanceByType`, `CategoryAggregation`, `SectionPosition`, and `SectionsMap` as well. The directory is still compiled, because `src/types/global.d.ts` lives in it.
 - `filterDataByDate` contains debug logging for the hard-coded date `2025-04-01`.
 - `displayResults` reports a section it did not write as `{ start: 0, end: 0 }`, and callers treat `start <= 0` as "not written". The type cannot express "absent". The chart code uses only `start` and the data row count, so `SectionPosition.end` is currently unused.
 - TypeScript is pinned to 6.x until `@rollup/plugin-typescript` supports 7.

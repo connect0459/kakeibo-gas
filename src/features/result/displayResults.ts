@@ -1,5 +1,6 @@
 import { STATIC_CONFIG } from "../../config";
-import type { CategoryAggregation, SectionPosition, SectionsMap } from "../../types";
+import type { SectionPosition, SectionsMap } from "../../types";
+import type { CategoryAggregation } from "../aggregation/types";
 import type { Locale } from "../locale/types";
 
 /**
