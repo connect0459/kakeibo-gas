@@ -67,7 +67,8 @@ This project follows **Red → Green → Refactor** (Detroit-school TDD):
 2. Follow Red → Green → Refactor; keep one concern per commit.
 3. Run `just verify` and `pre-commit run --all-files`, and make sure both pass.
 4. Open a pull request using the repository's PR template. CI runs automatically.
-5. Add a user-facing entry to the `[Unreleased]` section of `CHANGELOG.md`.
+
+Do not edit `CHANGELOG.md` in regular pull requests. Changelog entries are written all at once in the Release PR.
 
 ## Code style
 
