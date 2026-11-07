@@ -72,6 +72,8 @@ export const en: Locale = {
     infoTitle: "Information",
     doneTitle: "Done",
     invalidDate: "The date format is invalid. Enter a valid date.",
+    invalidPeriod:
+      "The period is invalid. Set the start date in B2 on or before the end date in D2.",
     archiveConfirmTitle: "Archive past data",
     archiveConfirmBody:
       "Data before this month will be moved to the archive sheet. This cannot be undone. Continue?",

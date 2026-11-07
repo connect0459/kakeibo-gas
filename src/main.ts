@@ -718,6 +718,14 @@ const runAggregation = (): void => {
       resultSheet.getRange("D2").setValue(endDateStr);
     }
 
+    if (!parsePeriod(startDateStr, endDateStr)) {
+      console.error("Rejected the result sheet period: start is after end");
+      const ui = SpreadsheetApp.getUi();
+      const { alerts } = getActiveLocale();
+      ui.alert(alerts.errorTitle, alerts.invalidPeriod, ui.ButtonSet.OK);
+      return;
+    }
+
     // Get or generate the title
     let title = resultSheet.getRange("A1").getValue();
     if (!title) {
