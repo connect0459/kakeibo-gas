@@ -2,6 +2,7 @@ import { STATIC_CONFIG } from "./config";
 import { aggregateByCategory } from "./features/aggregation/aggregateByCategory";
 import { filterDataByDate } from "./features/aggregation/filterDataByDate";
 import { findUnlistedCategories } from "./features/aggregation/findUnlistedCategories";
+import type { CategoryAggregation } from "./features/aggregation/types";
 import { commitArchive } from "./features/archive/commitArchive";
 import { getArchiveData } from "./features/archive/getArchiveData";
 import { getOrCreateArchiveSheet } from "./features/archive/getOrCreateArchiveSheet";
@@ -21,7 +22,7 @@ import type { Locale } from "./features/locale/types";
 import { runExclusively } from "./features/lock/runExclusively";
 import { displayResults } from "./features/result/displayResults";
 import { isWithinThrottleWindow } from "./features/throttle/isWithinThrottleWindow";
-import type { CategoryAggregation, SectionPosition } from "./types";
+import type { SectionPosition } from "./types";
 
 // Cache of data read from the config sheet
 let cachedConfigData: ConfigSheetData | null = null;

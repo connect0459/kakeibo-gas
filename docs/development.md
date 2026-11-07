@@ -124,8 +124,8 @@ kakeibo-gas/
 │   └── adrs/                # Architecture Decision Records
 ├── src/                     # Source code
 │   ├── main.ts              # Entry point
-│   ├── types.ts             # Type definitions
-│   ├── types/               # Type definitions (details)
+│   ├── types.ts             # Shared section types
+│   ├── types/               # GAS ambient declarations
 │   └── features/            # Code by feature (Package by Features)
 │       └── archive/         # Archive feature
 ├── tests/                   # Test code

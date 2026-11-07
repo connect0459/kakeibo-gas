@@ -1,17 +1,5 @@
+import type { TransactionData } from "../aggregation/types";
 import { parseAmount } from "../amount/parseAmount";
-
-/**
- * Transaction data type definition
- */
-export interface TransactionData {
-  date: Date | null;
-  type: string;
-  category: string;
-  description: string;
-  income: number;
-  expense: number;
-  total: number;
-}
 
 export interface RawDataSource {
   sheetName: string;

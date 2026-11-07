@@ -1,5 +1,5 @@
 import { STATIC_CONFIG } from "../../config";
-import type { TransactionData } from "../../types";
+import type { TransactionData } from "../aggregation/types";
 import { parseAmount } from "../amount/parseAmount";
 import { parseDateInZone } from "../date/parseDateInZone";
 
