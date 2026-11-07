@@ -87,6 +87,8 @@ export const ja: Locale = {
     initializeFailed: (message) => `初期化中にエラーが発生しました: ${message}`,
     summaryFailed: (message) => `集計処理中にエラーが発生しました: ${message}`,
     sheetNotFound: (sheetName) => `「${sheetName}」シートが見つかりません。`,
+    invalidAmount: (sheetName, row) =>
+      `「${sheetName}」シートの${row}行目の金額が不正です。1000 や 1,000 のような 0 以上の数値を入力してください。`,
     categoriesWithoutKind: (kindColumn, categories) =>
       `設定シートの「${kindColumn}」列が未設定または不正な科目があります: ${categories.join("、")}`,
     categoriesNotListed: (categories) =>

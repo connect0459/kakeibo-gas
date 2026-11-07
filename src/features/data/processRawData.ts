@@ -1,3 +1,5 @@
+import { parseAmount } from "../amount/parseAmount";
+
 /**
  * Transaction data type definition
  */
@@ -11,13 +13,21 @@ export interface TransactionData {
   total: number;
 }
 
+export interface RawDataSource {
+  sheetName: string;
+  firstRow: number;
+  describeInvalidAmount: (sheetName: string, row: number) => string;
+}
+
 /**
  * Processes raw data and converts it to the standard format
  *
  * @param data - Raw data from the spreadsheet (columns A to F)
+ * @param source - Sheet name, sheet row of the first data row, and the error message for a rejected amount
+ * @throws When an amount is negative or is not a plain number
  * @returns Array of processed transaction data (entries with an empty category are excluded)
  */
-export const processRawData = (data: unknown[][]): TransactionData[] => {
+export const processRawData = (data: unknown[][], source: RawDataSource): TransactionData[] => {
   const result: TransactionData[] = [];
   let lastValidDate: Date | null = null;
   let lastValidType: string | null = null;
@@ -41,24 +51,10 @@ export const processRawData = (data: unknown[][]): TransactionData[] => {
       continue;
     }
 
-    // Parse income
-    let income = 0;
-    const incomeValue = row[COLUMN.INCOME];
-    if (incomeValue !== null && incomeValue !== "") {
-      income =
-        typeof incomeValue === "number"
-          ? incomeValue
-          : Number(String(incomeValue).replace(/[^\d.-]/g, ""));
-    }
-
-    // Parse expense
-    let expense = 0;
-    const expenseValue = row[COLUMN.EXPENSE];
-    if (expenseValue !== null && expenseValue !== "") {
-      expense =
-        typeof expenseValue === "number"
-          ? expenseValue
-          : Number(String(expenseValue).replace(/[^\d.-]/g, ""));
+    const income = parseAmount(row[COLUMN.INCOME]);
+    const expense = parseAmount(row[COLUMN.EXPENSE]);
+    if (income === null || expense === null) {
+      throw new Error(source.describeInvalidAmount(source.sheetName, source.firstRow + i));
     }
 
     // Date handling - update if the current row has a date, otherwise use the previous valid date

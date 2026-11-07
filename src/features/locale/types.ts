@@ -91,6 +91,7 @@ export type Locale = DeepReadonly<{
     initializeFailed: (message: string) => string;
     summaryFailed: (message: string) => string;
     sheetNotFound: (sheetName: string) => string;
+    invalidAmount: (sheetName: string, row: number) => string;
     categoriesWithoutKind: (kindColumn: string, categories: readonly string[]) => string;
     categoriesNotListed: (categories: readonly string[]) => string;
   };

@@ -72,10 +72,14 @@ export const aggregateByCategory = (
     const mainCategory = getCategoryMainGroup(item.category, otherGroup);
     const amount = kind === "income" ? item.income : item.expense;
 
-    // Aggregate only when the amount is valid and greater than 0
-    if (mainCategory && !Number.isNaN(amount) && amount > 0) {
-      result[mainCategory] = (result[mainCategory] ?? 0) + amount;
+    if (!(amount >= 0)) {
+      throw new Error(`Cannot aggregate a negative or non-numeric amount for "${item.category}"`);
     }
+    if (amount === 0) {
+      continue;
+    }
+
+    result[mainCategory] = (result[mainCategory] ?? 0) + amount;
   }
 
   return result;

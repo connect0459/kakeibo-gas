@@ -428,7 +428,12 @@ const generateStatisticsForPeriod = (
 
     // Get data (from the input sheet and the archive sheet)
     const inputData = getInputData();
-    const archiveData = getArchiveData(ss, getActiveLocale().sheets.archive, timeZone);
+    const archiveData = getArchiveData(
+      ss,
+      getActiveLocale().sheets.archive,
+      timeZone,
+      getActiveLocale().alerts.invalidAmount,
+    );
 
     // Combine both sets of data
     const allData = [...inputData, ...archiveData];
@@ -540,7 +545,11 @@ const getInputData = () => {
   const data = inputSheet
     .getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT)
     .getValues();
-  return processRawData(data);
+  return processRawData(data, {
+    sheetName: getActiveLocale().sheets.input,
+    firstRow: 2,
+    describeInvalidAmount: getActiveLocale().alerts.invalidAmount,
+  });
 };
 
 /**
