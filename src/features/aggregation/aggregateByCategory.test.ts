@@ -549,4 +549,45 @@ describe("aggregateByCategory", () => {
       ).toEqual({ 臨時収入: 2000 });
     });
   });
+
+  describe("Group names that collide with built-in object members", () => {
+    test.each(["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"])(
+      "A group named %s is totaled as a plain amount",
+      (group) => {
+        const category = `Expense-${group}-Parts`;
+        const transactions = [
+          createTransaction(category, 0, 5000),
+          createTransaction(category, 0, 300),
+        ];
+        const catalog = CategoryCatalog.of([{ name: category, kind: "expense", excluded: false }]);
+
+        const result = aggregateByCategory(
+          transactions,
+          "expense",
+          catalog,
+          en.vocabulary.otherGroup,
+        );
+
+        expect(Object.entries(result)).toEqual([[group, 5300]]);
+      },
+    );
+
+    test("Colliding group names do not disturb the totals of ordinary groups", () => {
+      const transactions = [
+        createTransaction("Expense-constructor-Parts", 0, 5000),
+        createTransaction("Expense-__proto__-Parts", 0, 700),
+        createTransaction("Expense-Food-DiningOut", 0, 1200),
+      ];
+      const catalog = catalogByWording(transactions);
+
+      const result = aggregateByCategory(
+        transactions,
+        "expense",
+        catalog,
+        en.vocabulary.otherGroup,
+      );
+
+      expect(Object.values(result).reduce((sum, amount) => sum + amount, 0)).toBe(6900);
+    });
+  });
 });

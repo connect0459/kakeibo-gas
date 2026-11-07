@@ -60,7 +60,7 @@ export const aggregateByCategory = (
   catalog: CategoryCatalog,
   otherGroup: string,
 ): CategoryAggregation => {
-  const result: CategoryAggregation = {};
+  const result: CategoryAggregation = Object.create(null);
 
   for (const item of data) {
     if (catalog.kindOf(item.category) !== kind || catalog.isExcluded(item.category)) {
