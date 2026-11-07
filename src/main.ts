@@ -342,6 +342,8 @@ const archivePreviousMonthData = (): void => {
       const plan = planArchive(inputData, thisMonthStartDate, timeZone, {
         carryoverCategory: locale.vocabulary.carryoverCategory,
         describeCarryover: locale.vocabulary.carryoverDescription,
+        describeInvalidAmount: (inputRow) =>
+          locale.alerts.invalidAmount(locale.sheets.input, inputRow),
       });
 
       // When there is no data to move

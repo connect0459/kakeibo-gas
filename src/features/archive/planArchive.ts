@@ -1,9 +1,11 @@
+import { parseAmount } from "../amount/parseAmount";
 import { formatDateToString } from "../date/formatDateToString";
 import { filterZeroRecords } from "./filterZeroRecords";
 
 export type ArchiveLabels = {
   carryoverCategory: string;
   describeCarryover: (type: string) => string;
+  describeInvalidAmount: (inputRow: number) => string;
 };
 
 export type KeptRow = {
@@ -26,6 +28,8 @@ const COLUMN = {
   INCOME: 4,
   EXPENSE: 5,
 } as const;
+
+const FIRST_INPUT_ROW = 2;
 
 const isBlankRow = (row: readonly unknown[]): boolean =>
   !row[0] && !row[1] && !row[2] && !row[3] && !row[4] && !row[5];
@@ -95,14 +99,14 @@ export const planArchive = (
 
     archivedIndexes.push(index);
 
+    const income = parseAmount(row[COLUMN.INCOME]);
+    const expense = parseAmount(row[COLUMN.EXPENSE]);
+    if (income === null || expense === null) {
+      throw new Error(labels.describeInvalidAmount(index + FIRST_INPUT_ROW));
+    }
+
     if (type) {
-      const income = Number.parseFloat(String(row[COLUMN.INCOME] || 0));
-      const expense = Number.parseFloat(String(row[COLUMN.EXPENSE] || 0));
-      const balance = balanceByType.get(type) as number;
-      balanceByType.set(
-        type,
-        balance + (Number.isNaN(income) ? 0 : income) - (Number.isNaN(expense) ? 0 : expense),
-      );
+      balanceByType.set(type, (balanceByType.get(type) as number) + income - expense);
     }
 
     if (row[COLUMN.CATEGORY] === labels.carryoverCategory) {

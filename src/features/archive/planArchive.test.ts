@@ -8,6 +8,7 @@ const THIS_MONTH_START = startOfDayInZone(TOKYO, 2026, 9, 1);
 const labels = {
   carryoverCategory: "Income-Carryover",
   describeCarryover: (type: string) => `Carryover (${type})`,
+  describeInvalidAmount: (inputRow: number) => `Invalid amount in input row ${inputRow}`,
 };
 
 const row = (
@@ -240,15 +241,15 @@ describe("planArchive", () => {
       ]);
     });
 
-    it("ignores amounts that are not numbers", () => {
+    it("rejects amounts that are not numbers instead of ignoring them", () => {
       const rows = [
         row(SEPTEMBER, "Cash", "Income-Salary-Base", "", "n/a", ""),
         row(SEPTEMBER, "Cash", "Expense-Food", "", "", 300),
       ];
 
-      const plan = planArchive(rows, THIS_MONTH_START, TOKYO, labels);
-
-      expect(plan.carryForwardRows[0].slice(4)).toEqual([0, 300]);
+      expect(() => planArchive(rows, THIS_MONTH_START, TOKYO, labels)).toThrow(
+        labels.describeInvalidAmount(2),
+      );
     });
   });
 
@@ -272,6 +273,38 @@ describe("planArchive", () => {
 
       expect(plan.pastRowCount).toBe(2);
       expect(plan.rowsToArchive).toEqual([rows[1]]);
+    });
+  });
+  describe("amounts read by the shared rule", () => {
+    it("reads amount text with a thousands separator into the carried balance", () => {
+      const past = row(SEPTEMBER, "Cash", "Income-Salary", "", "1,000", "");
+
+      const plan = planArchive([past], THIS_MONTH_START, TOKYO, labels);
+
+      expect(plan.carryForwardRows[0].slice(4, 6)).toEqual([1000, 0]);
+    });
+
+    it.each(["(1,000)", "▲500", "−500", "1e3", "-500", -500])(
+      "rejects an archived row with amount %s and names its input row",
+      (amount) => {
+        const rows = [
+          row(SEPTEMBER, "Cash", "Expense-Food", "lunch", "", 800),
+          BLANK_ROW,
+          row(SEPTEMBER, "Cash", "Expense-Food", "dinner", "", amount),
+        ];
+
+        expect(() => planArchive(rows, THIS_MONTH_START, TOKYO, labels)).toThrow(
+          labels.describeInvalidAmount(4),
+        );
+      },
+    );
+
+    it("rejects an invalid amount in an archived row that has no account type", () => {
+      const rows = [row(SEPTEMBER, "", "Expense-Food", "lunch", "", "▲500")];
+
+      expect(() => planArchive(rows, THIS_MONTH_START, TOKYO, labels)).toThrow(
+        labels.describeInvalidAmount(2),
+      );
     });
   });
 });
