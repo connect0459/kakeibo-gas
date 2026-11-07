@@ -166,7 +166,7 @@ Input and archive columns: date, type, category, description, income, expense (A
 - **Cloud Provider**: Google (Apps Script runtime, V8)
 - **Key Services Used**: Google Sheets, Apps Script
 - **CI/CD Pipeline**: GitHub Actions. `ci.yml` runs Biome, `tsc --noEmit`, Vitest, and the Rollup build on pushes to `main` and on pull requests. `release.yml` runs on `v*` tags, builds `dist/main.js`, and attaches it to a GitHub Release. Nothing deploys to Google automatically; users paste `main.js` into the Apps Script editor, or developers run `clasp push`.
-- **Monitoring & Logging**: `console.log` / `console.error` in the script; the manifest sets `exceptionLogging` to `STACKDRIVER`
+- **Monitoring & Logging**: `console.log` / `console.error` in the script; the manifest sets `exceptionLogging` to `STACKDRIVER`, the value the manifest reference defines for Cloud Logging. Routine logs carry fixed step messages, counts, and the locale ID only; `tests/architecture/noFinancialDataInLogs.test.ts` fails when a `console.log` / `info` / `debug` call passes anything else. See `SECURITY.md` for what is logged.
 
 ## 7. Security Considerations
 
