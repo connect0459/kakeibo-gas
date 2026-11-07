@@ -12,6 +12,9 @@ export const STATIC_CONFIG = {
   RESULT_AMOUNT_FORMAT: "¥#,##0",
   RESULT_RATIO_FORMAT: "0.0%",
 
+  // Number of columns the script reads and writes on the input and archive sheets (A to F)
+  TRANSACTION_COLUMN_COUNT: 6,
+
   // Input sheet column definitions (0-based index)
   INPUT_COLUMNS: {
     DATE: 0, // Column A: date

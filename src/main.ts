@@ -2,6 +2,7 @@ import { STATIC_CONFIG } from "./config";
 import { aggregateByCategory } from "./features/aggregation/aggregateByCategory";
 import { filterDataByDate } from "./features/aggregation/filterDataByDate";
 import { findUnlistedCategories } from "./features/aggregation/findUnlistedCategories";
+import { commitArchive } from "./features/archive/commitArchive";
 import { getArchiveData } from "./features/archive/getArchiveData";
 import { getOrCreateArchiveSheet } from "./features/archive/getOrCreateArchiveSheet";
 import { planArchive } from "./features/archive/planArchive";
@@ -282,7 +283,14 @@ const archivePreviousMonthData = (): void => {
       return;
     }
 
-    const inputData = inputSheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    const inputRange = inputSheet.getRange(
+      2,
+      1,
+      lastRow - 1,
+      STATIC_CONFIG.TRANSACTION_COLUMN_COUNT,
+    );
+    const inputData = inputRange.getValues();
+    const formulas = inputRange.getFormulas();
     const plan = planArchive(inputData, thisMonthStartDate, timeZone, {
       carryoverCategory: locale.vocabulary.carryoverCategory,
       describeCarryover: locale.vocabulary.carryoverDescription,
@@ -299,29 +307,13 @@ const archivePreviousMonthData = (): void => {
       return;
     }
 
-    // Get the archive sheet's last row to decide where to append
-    // Get the last row with data in column A (ignoring formulas in column G onward)
-    let archiveLastRow = 1; // With the header row as the minimum
-    const aColumnValues = archiveSheet.getRange("A1:A" + archiveSheet.getMaxRows()).getValues();
-    for (let i = 0; i < aColumnValues.length; i++) {
-      if (aColumnValues[i][0] !== "") {
-        archiveLastRow = i + 1; // +1 because the index is 0-based
-      }
-    }
-    const insertRow = archiveLastRow + 1;
-
-    // Append data to the archive sheet (columns A to F only)
-    archiveSheet.getRange(insertRow, 1, plan.rowsToArchive.length, 6).setValues(plan.rowsToArchive);
-
-    // Clear the input sheet data (columns A to F only)
-    inputSheet.getRange(2, 1, lastRow - 1, 6).clearContent();
-
-    const newInputData = [...plan.carryForwardRows, ...plan.rowsToKeep];
-
-    // Set the new data on the input sheet
-    if (newInputData.length > 0) {
-      inputSheet.getRange(2, 1, newInputData.length, 6).setValues(newInputData);
-    }
+    commitArchive({
+      inputSheet,
+      archiveSheet,
+      values: inputData,
+      formulas,
+      plan,
+    });
 
     // Completion message
     ui.alert(alerts.doneTitle, alerts.archived(plan.rowsToArchive.length), ui.ButtonSet.OK);
@@ -359,7 +351,7 @@ const initializeInputSheet = (): void => {
     // Clear data other than the header row (columns A to F only)
     const lastRow = inputSheet.getLastRow();
     if (lastRow > 1) {
-      inputSheet.getRange(2, 1, lastRow - 1, 6).clearContent();
+      inputSheet.getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT).clearContent();
     }
 
     ui.alert(alerts.doneTitle, alerts.initialized, ui.ButtonSet.OK);
@@ -496,7 +488,9 @@ const getInputData = () => {
     return [];
   }
 
-  const data = inputSheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  const data = inputSheet
+    .getRange(2, 1, lastRow - 1, STATIC_CONFIG.TRANSACTION_COLUMN_COUNT)
+    .getValues();
   return processRawData(data);
 };
 

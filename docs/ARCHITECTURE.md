@@ -13,7 +13,7 @@ kakeibo-gas/
 │   ├── types.ts, types/           # Shared types (overlapping definitions, see section 9)
 │   └── features/                  # Package by Features
 │       ├── aggregation/           # aggregateByCategory, findUnlistedCategories
-│       ├── archive/               # getArchiveData, getOrCreateArchiveSheet, planArchive, filterZeroRecords
+│       ├── archive/               # getArchiveData, getOrCreateArchiveSheet, planArchive, layoutInputBlock, commitArchive, filterZeroRecords
 │       ├── category/              # CategoryCatalog, parseKindWord
 │       ├── chart/                 # resolveChartRange
 │       ├── config/                # initializeConfigSheet, readConfigSheet, getDefaultConfigRows, defaultConfigRows.{ja,en}, types
@@ -91,13 +91,13 @@ A single GAS script; each feature below is a directory under `src/features/`.
 - **Description**: Wires the features together, builds charts, and runs the archive flow. Creating the input sheet and writing the result tables are delegated to `features/input` and `features/result`; `main.ts` supplies the active spreadsheet, locale, and type options. About 700 lines. Text and sheet names come from `getActiveLocale()`, which detects the language once per execution with `detectLocale`. Chart ranges come from the section positions that `displayResults` (in `features/result`) returns, resolved by `resolveChartRange` in `features/chart`.
 - **Technologies**: TypeScript, GAS services
 - **Deployment**: Bundled into `dist/main.js`
-- **Archive flow** (steps 2 to 4 and 6 are the pure `planArchive`):
+- **Archive flow** (steps 2 to 4 are the pure `planArchive`; step 6 lays the block out with the pure `layoutInputBlock`; step 5 and the write are `commitArchive`):
   1. Confirm with the user (dialog).
   2. Walk the input rows, carrying forward the last seen date and type into rows that leave them blank.
   3. Split rows into "before this month" (moved) and "this month or later" (kept); accumulate a balance per type from the moved rows.
   4. Zero the amounts on carryover rows being archived, so carryover is not counted as income or expense.
-  5. Drop zero-amount records, append the rest to the archive sheet, and clear the input rows.
-  6. Write one carryover row per type (the locale's carryover category, `収入-繰越金` in `ja`) back to the input sheet, dated the first of this month.
+  5. Drop zero-amount records and append the rest to the archive sheet.
+  6. Lay out the input rows in place: kept rows stay at their positions, and every cell that holds a formula keeps it. One carryover row per type (the locale's carryover category, `収入-繰越金` in `ja`, dated the first of this month) takes over each position vacated by an archived row, and any left over go after the last row. The whole block is written in one call; if that call fails, the rows appended in step 5 are removed and the input sheet is unchanged.
 
 #### 3.2.2 Feature modules (`src/features/*`)
 

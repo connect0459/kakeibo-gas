@@ -6,10 +6,16 @@ export type ArchiveLabels = {
   describeCarryover: (type: string) => string;
 };
 
+export type KeptRow = {
+  index: number;
+  row: unknown[];
+};
+
 export type ArchivePlan = {
   pastRowCount: number;
   rowsToArchive: unknown[][];
-  rowsToKeep: unknown[][];
+  keptRows: KeptRow[];
+  archivedIndexes: number[];
   carryForwardRows: unknown[][];
 };
 
@@ -27,12 +33,12 @@ const isBlankRow = (row: readonly unknown[]): boolean =>
 const isValidDate = (value: unknown): value is Date =>
   value instanceof Date && !Number.isNaN(value.getTime());
 
-const inheritDateAndType = (inputRows: readonly unknown[][]): unknown[][] => {
+const inheritDateAndType = (inputRows: readonly unknown[][]): KeptRow[] => {
   let lastValidDate: Date | null = null;
   let lastValidType: unknown = null;
-  const rows: unknown[][] = [];
+  const rows: KeptRow[] = [];
 
-  for (const original of inputRows) {
+  for (const [index, original] of inputRows.entries()) {
     if (isBlankRow(original)) {
       continue;
     }
@@ -52,7 +58,7 @@ const inheritDateAndType = (inputRows: readonly unknown[][]): unknown[][] => {
       row[COLUMN.TYPE] = lastValidType;
     }
 
-    rows.push(row);
+    rows.push({ index, row });
   }
 
   return rows;
@@ -67,12 +73,13 @@ export const planArchive = (
   const thisMonthStartText = formatDateToString(thisMonthStart, timeZone);
   const balanceByType = new Map<string, number>();
   const rowsToMove: unknown[][] = [];
-  const rowsToKeep: unknown[][] = [];
+  const archivedIndexes: number[] = [];
+  const keptRows: KeptRow[] = [];
 
-  for (const row of inheritDateAndType(inputRows)) {
+  for (const { index, row } of inheritDateAndType(inputRows)) {
     const date = row[COLUMN.DATE];
     if (!isValidDate(date)) {
-      rowsToKeep.push(row);
+      keptRows.push({ index, row });
       continue;
     }
 
@@ -82,9 +89,11 @@ export const planArchive = (
     }
 
     if (formatDateToString(date, timeZone) >= thisMonthStartText) {
-      rowsToKeep.push(row);
+      keptRows.push({ index, row });
       continue;
     }
+
+    archivedIndexes.push(index);
 
     if (type) {
       const income = Number.parseFloat(String(row[COLUMN.INCOME] || 0));
@@ -118,7 +127,8 @@ export const planArchive = (
   return {
     pastRowCount: rowsToMove.length,
     rowsToArchive: filterZeroRecords(rowsToMove),
-    rowsToKeep,
+    keptRows,
+    archivedIndexes,
     carryForwardRows,
   };
 };
