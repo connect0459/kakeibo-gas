@@ -13,8 +13,7 @@ export const ja: Locale = {
     type: "分類",
     category: "科目",
     description: "摘要",
-    income: "収入",
-    expense: "支出",
+    amount: "金額",
   },
   configHeaders: {
     type: "分類",

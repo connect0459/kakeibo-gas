@@ -6,9 +6,7 @@ export type TransactionData = {
   type: string;
   category: string;
   description: string;
-  income: number;
-  expense: number;
-  total: number;
+  amount: number;
 };
 
 /**

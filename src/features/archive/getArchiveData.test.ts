@@ -37,10 +37,10 @@ describe("getArchiveData", () => {
   test("Retrieves all data from the archive sheet", () => {
     // Given: the archive sheet contains 3 records
     const mockData = [
-      ["日付", "分類", "科目", "摘要", "収入", "支出"], // Header row
-      ["2024-01-15", "現金", "食費", "ランチ", 0, 800],
-      ["2024-02-20", "銀行", "給料", "1月分", 300000, 0],
-      ["2024-03-10", "現金", "交通費", "電車代", 0, 500],
+      ["日付", "分類", "科目", "摘要", "金額"], // Header row
+      ["2024-01-15", "現金", "食費", "ランチ", -800],
+      ["2024-02-20", "銀行", "給料", "1月分", 300000],
+      ["2024-03-10", "現金", "交通費", "電車代", -500],
     ];
 
     mockArchiveSheet.getLastRow = () => 4;
@@ -64,24 +64,20 @@ describe("getArchiveData", () => {
       type: "現金",
       category: "食費",
       description: "ランチ",
-      income: 0,
-      expense: 800,
-      total: -800,
+      amount: -800,
     });
     expect(result[1]).toMatchObject({
       date: startOfDayInZone(TOKYO, 2024, 1, 20),
       type: "銀行",
       category: "給料",
       description: "1月分",
-      income: 300000,
-      expense: 0,
-      total: 300000,
+      amount: 300000,
     });
   });
 
   test("Returns an empty array when only the header row exists", () => {
     // Given: header row only
-    const mockData = [["日付", "分類", "科目", "摘要", "収入", "支出"]];
+    const mockData = [["日付", "分類", "科目", "摘要", "金額"]];
 
     mockArchiveSheet.getLastRow = () => 1;
     mockArchiveSheet.getDataRange = () =>
@@ -101,11 +97,11 @@ describe("getArchiveData", () => {
     expect(result).toEqual([]);
   });
 
-  test("Retrieves only columns A to F (columns G onward are ignored)", () => {
-    // Given: data also exists in columns G onward
+  test("Retrieves only columns A to E (columns F onward are ignored)", () => {
+    // Given: data also exists in columns F onward
     const mockData = [
-      ["日付", "分類", "科目", "摘要", "収入", "支出", "余分な列"],
-      ["2024-01-15", "現金", "食費", "ランチ", 0, 800, "無視されるデータ"],
+      ["日付", "分類", "科目", "摘要", "金額", "余分な列"],
+      ["2024-01-15", "現金", "食費", "ランチ", -800, "無視されるデータ"],
     ];
 
     mockArchiveSheet.getLastRow = () => 2;
@@ -122,15 +118,14 @@ describe("getArchiveData", () => {
       en.alerts.invalidAmount,
     );
 
-    // Then: only columns A to F are retrieved (columns G onward are ignored)
+    // Then: only columns A to E are retrieved (columns F onward are ignored)
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       date: startOfDayInZone(TOKYO, 2024, 0, 15),
       type: "現金",
       category: "食費",
       description: "ランチ",
-      income: 0,
-      expense: 800,
+      amount: -800,
     });
   });
 
@@ -171,8 +166,8 @@ describe("getArchiveData", () => {
     mockArchiveSheet.getDataRange = () =>
       ({
         getValues: () => [
-          ["Date", "Type", "Category", "Description", "Income", "Expense"],
-          ["2025-04-01", "Cash", "Expense-Food", "lunch", 0, 800],
+          ["Date", "Type", "Category", "Description", "Amount"],
+          ["2025-04-01", "Cash", "Expense-Food", "lunch", -800],
         ],
       }) as GoogleAppsScript.Spreadsheet.Range;
 
@@ -187,14 +182,14 @@ describe("getArchiveData", () => {
   });
   describe("Amount rules shared with the input sheet", () => {
     const archiveWith = (rows: unknown[][]) => {
-      const mockData = [["日付", "分類", "科目", "摘要", "収入", "支出"], ...rows];
+      const mockData = [["日付", "分類", "科目", "摘要", "金額"], ...rows];
       mockArchiveSheet.getLastRow = () => mockData.length;
       mockArchiveSheet.getDataRange = () =>
         ({ getValues: () => mockData }) as GoogleAppsScript.Spreadsheet.Range;
     };
 
     test("Amount text with a thousands separator counts as the same amount as on the input sheet", () => {
-      archiveWith([["2024-01-15", "現金", "食費", "ランチ", "", "1,000"]]);
+      archiveWith([["2024-01-15", "現金", "食費", "ランチ", "-1,000"]]);
 
       const result = getArchiveData(
         mockSpreadsheet,
@@ -203,15 +198,15 @@ describe("getArchiveData", () => {
         en.alerts.invalidAmount,
       );
 
-      expect(result[0]).toMatchObject({ expense: 1000, total: -1000 });
+      expect(result[0]).toMatchObject({ amount: -1000 });
     });
 
-    test.each(["(1,000)", "▲500", "−500", "1e3", "-500", "abc"])(
+    test.each(["(1,000)", "▲500", "−500", "1e3", "abc"])(
       "Amount %s is rejected with an error naming the sheet and the row",
       (text) => {
         archiveWith([
-          ["2024-01-15", "現金", "食費", "ランチ", 0, 800],
-          ["2024-01-16", "現金", "食費", "夕食", 0, text],
+          ["2024-01-15", "現金", "食費", "ランチ", -800],
+          ["2024-01-16", "現金", "食費", "夕食", text],
         ]);
 
         expect(() =>

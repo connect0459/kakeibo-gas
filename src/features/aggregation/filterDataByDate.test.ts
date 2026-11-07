@@ -8,9 +8,7 @@ const transaction = (date: Date | null): TransactionData => ({
   type: "Cash",
   category: "Expense-Food",
   description: "",
-  income: 0,
-  expense: 100,
-  total: -100,
+  amount: -100,
 });
 
 describe("filterDataByDate", () => {

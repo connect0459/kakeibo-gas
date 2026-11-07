@@ -9,7 +9,7 @@ import { parseDateInZone } from "../date/parseDateInZone";
  * @param ss - Spreadsheet object
  * @param archiveSheetName - Name of the archive sheet
  * @param timeZone - IANA time zone in which a text date is read
- * @param describeInvalidAmount - Error message for an amount that is negative or not a plain number
+ * @param describeInvalidAmount - Error message for an amount that is not a plain number
  * @returns Array of all transaction data (no period filter)
  */
 export const getArchiveData = (
@@ -46,9 +46,8 @@ export const getArchiveData = (
     } else {
       date = new Date(rawDate);
     }
-    const income = parseAmount(row[STATIC_CONFIG.ARCHIVE_COLUMNS.INCOME]);
-    const expense = parseAmount(row[STATIC_CONFIG.ARCHIVE_COLUMNS.EXPENSE]);
-    if (income === null || expense === null) {
+    const amount = parseAmount(row[STATIC_CONFIG.ARCHIVE_COLUMNS.AMOUNT]);
+    if (amount === null) {
       throw new Error(describeInvalidAmount(archiveSheetName, index + 2));
     }
 
@@ -57,9 +56,7 @@ export const getArchiveData = (
       type: String(row[STATIC_CONFIG.ARCHIVE_COLUMNS.TYPE]),
       category: String(row[STATIC_CONFIG.ARCHIVE_COLUMNS.CATEGORY]),
       description: String(row[STATIC_CONFIG.ARCHIVE_COLUMNS.DESCRIPTION]),
-      income,
-      expense,
-      total: income - expense,
+      amount,
     };
   });
 };

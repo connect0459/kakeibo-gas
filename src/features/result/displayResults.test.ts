@@ -156,9 +156,7 @@ describe("displayResults", () => {
         type: "cash",
         category: `Expense-${group}-Parts`,
         description: "",
-        income: 0,
-        expense: 1000,
-        total: -1000,
+        amount: -1000,
       }));
       const expense = aggregateByCategory(
         transactions,

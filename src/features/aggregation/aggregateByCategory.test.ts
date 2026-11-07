@@ -19,9 +19,7 @@ describe("aggregateByCategory", () => {
     type: "現金",
     category,
     description: "テスト",
-    income,
-    expense,
-    total: income - expense,
+    amount: income - expense,
   });
 
   describe("Happy path: income aggregation rules", () => {
@@ -236,20 +234,56 @@ describe("aggregateByCategory", () => {
       expect(result).toEqual({ 給与: 300000 });
     });
 
-    test("A negative amount is rejected instead of being dropped", () => {
-      const transactions: TransactionData[] = [
+    const aggregate = (
+      transactions: TransactionData[],
+      kind: "income" | "expense",
+      excluded: string[] = [],
+    ) =>
+      aggregateByCategory(
+        transactions,
+        kind,
+        catalogByWording(transactions, excluded),
+        ja.vocabulary.otherGroup,
+      );
+
+    test("A negative amount on an income category is rejected instead of being dropped", () => {
+      const transactions = [
         createTransaction("収入-給与-本給", 300000, 0),
         createTransaction("収入-投資収入-配当金", -1000, 0),
       ];
 
-      expect(() =>
-        aggregateByCategory(
-          transactions,
-          "income",
-          catalogByWording(transactions, []),
-          ja.vocabulary.otherGroup,
-        ),
-      ).toThrow("Cannot aggregate");
+      expect(() => aggregate(transactions, "income")).toThrow(
+        'The amount of "収入-投資収入-配当金" has a sign that does not match its income kind',
+      );
+    });
+
+    test("A positive amount on an expense category is rejected instead of being dropped", () => {
+      const transactions = [
+        createTransaction("支出-食費-外食", 0, 5000),
+        createTransaction("支出-食費-食料品", 1000, 0),
+      ];
+
+      expect(() => aggregate(transactions, "expense")).toThrow(
+        'The amount of "支出-食費-食料品" has a sign that does not match its expense kind',
+      );
+    });
+
+    test("A sign that contradicts the kind of an excluded category is not an error", () => {
+      const transactions = [
+        createTransaction("収入-繰越金", -20000, 0),
+        createTransaction("収入-給与-本給", 300000, 0),
+      ];
+
+      expect(aggregate(transactions, "income", ["収入-繰越金"])).toEqual({ 給与: 300000 });
+    });
+
+    test("An expense is totaled as a positive amount", () => {
+      const transactions = [
+        createTransaction("支出-食費-外食", 0, 3000),
+        createTransaction("支出-食費-食料品", 0, 2000),
+      ];
+
+      expect(aggregate(transactions, "expense")).toEqual({ 食費: 5000 });
     });
   });
 
@@ -330,7 +364,7 @@ describe("aggregateByCategory", () => {
           catalogByWording(transactions, []),
           ja.vocabulary.otherGroup,
         ),
-      ).toThrow("Cannot aggregate");
+      ).toThrow("収入-投資収入-配当金");
     });
   });
 

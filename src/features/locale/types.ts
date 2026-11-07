@@ -19,8 +19,7 @@ export type Locale = DeepReadonly<{
     type: string;
     category: string;
     description: string;
-    income: string;
-    expense: string;
+    amount: string;
   };
   configHeaders: {
     type: string;

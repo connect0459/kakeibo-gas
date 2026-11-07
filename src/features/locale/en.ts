@@ -13,8 +13,7 @@ export const en: Locale = {
     type: "Type",
     category: "Category",
     description: "Description",
-    income: "Income",
-    expense: "Expense",
+    amount: "Amount",
   },
   configHeaders: {
     type: "Type",

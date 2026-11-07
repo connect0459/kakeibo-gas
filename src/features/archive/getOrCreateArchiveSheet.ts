@@ -20,24 +20,23 @@ export const getOrCreateArchiveSheet = (
   if (!archiveSheet) {
     archiveSheet = ss.insertSheet(sheetName);
 
-    // Set the header row (columns A to F only)
+    // Set the header row (columns A to E only)
     archiveSheet.getRange("A1").setValue(headers.date);
     archiveSheet.getRange("B1").setValue(headers.type);
     archiveSheet.getRange("C1").setValue(headers.category);
     archiveSheet.getRange("D1").setValue(headers.description);
-    archiveSheet.getRange("E1").setValue(headers.income);
-    archiveSheet.getRange("F1").setValue(headers.expense);
-    // Do not touch column G (reserved for formulas)
+    archiveSheet.getRange("E1").setValue(headers.amount);
+    // Do not touch column F onward (reserved for formulas)
 
     // Header row style
-    archiveSheet.getRange("A1:F1").setFontWeight("bold");
-    archiveSheet.getRange("A1:F1").setBackground("#f3f3f3");
+    archiveSheet.getRange("A1:E1").setFontWeight("bold");
+    archiveSheet.getRange("A1:E1").setBackground("#f3f3f3");
 
     // Set the date column format
     archiveSheet.getRange("A2:A1000").setNumberFormat(STATIC_CONFIG.DATE_FORMAT);
 
     // Set the amount column format
-    archiveSheet.getRange("E2:F1000").setNumberFormat(STATIC_CONFIG.AMOUNT_FORMAT);
+    archiveSheet.getRange("E2:E1000").setNumberFormat(STATIC_CONFIG.AMOUNT_FORMAT);
   }
 
   return archiveSheet;

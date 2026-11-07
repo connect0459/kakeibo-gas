@@ -8,9 +8,7 @@ const transaction = (category: string): TransactionData => ({
   type: "現金",
   category,
   description: "",
-  income: 0,
-  expense: 100,
-  total: -100,
+  amount: -100,
 });
 
 const catalog = CategoryCatalog.of([

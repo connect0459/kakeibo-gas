@@ -38,9 +38,16 @@ describe("parseAmount", () => {
     expect(parseAmount("1e3")).toBeNull();
   });
 
-  test("A negative amount is rejected whether typed as a number or as text", () => {
-    expect(parseAmount(-500)).toBeNull();
-    expect(parseAmount("-500")).toBeNull();
+  test("A negative amount is read with its sign whether typed as a number or as text", () => {
+    expect(parseAmount(-500)).toBe(-500);
+    expect(parseAmount("-500")).toBe(-500);
+    expect(parseAmount(" -1,234 ")).toBe(-1234);
+  });
+
+  test("A minus sign that is not directly before the digits is rejected", () => {
+    expect(parseAmount("--500")).toBeNull();
+    expect(parseAmount("5-00")).toBeNull();
+    expect(parseAmount("- 500")).toBeNull();
   });
 
   test("Text that is not a plain number is rejected", () => {

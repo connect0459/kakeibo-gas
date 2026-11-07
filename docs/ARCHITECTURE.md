@@ -132,12 +132,12 @@ A single GAS script; each feature below is a directory under `src/features/`.
 
 | Sheet | Name in the `ja` locale (`locale.sheets`) | Created by | Role |
 | :--- | :--- | :--- | :--- |
-| Input | `入力` | `getOrCreateInputSheet` | Current transactions, columns A–F |
+| Input | `入力` | `getOrCreateInputSheet` | Current transactions, columns A–E |
 | Result | `結果` | `getOrCreateResultSheet` | Aggregation output and the period cells (`B2`, `D2`) |
 | Archive | `アーカイブ` | `getOrCreateArchiveSheet` | Transactions moved out of the input sheet, same columns as the input sheet |
 | Config | `設定` | `initializeConfigSheet` | Type options, and for each category whether it is income or expense (column D) and whether it is excluded from aggregation (column C) |
 
-Input and archive columns: date, type, category, description, income, expense (A–F). Column G onward is left untouched for the user's own formulas. In the maintainer's live spreadsheet, column G is a total and the columns after it hold one balance per type, headed by the config sheet's types in the same order; the script never writes them (observed from exports of the sheets, so the formulas themselves are not recorded here).
+Input and archive columns: date, type, category, description, signed amount (A–E). The amount is positive for income and negative for expense, as decided in [issue #33](https://github.com/connect0459/kakeibo-gas/issues/33). Column F onward is left untouched for the user's own formulas. In the maintainer's live spreadsheet, column F is a running total and the columns after it hold one balance per type, headed by the config sheet's types in the same order; the script never writes them (observed from exports of the sheets, so the formulas themselves are not recorded here).
 
 **Category grammar.** A category is a hyphen-separated string, `<kind>-<group>[-<item>]`, for example `支出-食費-外食`. What the code does with it:
 
@@ -204,7 +204,7 @@ Known architectural debt, recorded as facts about the current code rather than c
 - **Project Name**: kakeibo-gas
 - **Repository URL**: <https://github.com/connect0459/kakeibo-gas>
 - **Primary Contact/Team**: [connect0459](https://github.com/connect0459)
-- **Date of Last Update**: 2026-10-20
+- **Date of Last Update**: 2026-11-07
 
 ## 11. Glossary / Acronyms
 

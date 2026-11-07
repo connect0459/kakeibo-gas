@@ -38,13 +38,12 @@ describe("getOrCreateInputSheet", () => {
       getOrCreateInputSheet(spreadsheet.asSpreadsheet(), ja, () => typeOptions);
 
       const sheet = spreadsheet.getSheetByName("入力");
-      expect(["A1", "B1", "C1", "D1", "E1", "F1"].map((a1) => sheet?.state(a1).value)).toEqual([
+      expect(["A1", "B1", "C1", "D1", "E1"].map((a1) => sheet?.state(a1).value)).toEqual([
         "日付",
         "分類",
         "科目",
         "摘要",
-        "収入",
-        "支出",
+        "金額",
       ]);
     });
 
@@ -54,23 +53,22 @@ describe("getOrCreateInputSheet", () => {
       getOrCreateInputSheet(spreadsheet.asSpreadsheet(), en, () => typeOptions);
 
       const sheet = spreadsheet.getSheetByName("Input");
-      expect(["A1", "B1", "C1", "D1", "E1", "F1"].map((a1) => sheet?.state(a1).value)).toEqual([
+      expect(["A1", "B1", "C1", "D1", "E1"].map((a1) => sheet?.state(a1).value)).toEqual([
         "Date",
         "Type",
         "Category",
         "Description",
-        "Income",
-        "Expense",
+        "Amount",
       ]);
     });
 
-    test("Leaves column G untouched because it is reserved for formulas", () => {
+    test("Leaves column F untouched because it is reserved for formulas", () => {
       const spreadsheet = new FakeSpreadsheet();
 
       getOrCreateInputSheet(spreadsheet.asSpreadsheet(), ja, () => typeOptions);
 
       const touched = [...(spreadsheet.getSheetByName("入力")?.ranges.keys() ?? [])];
-      expect(touched.filter((a1) => a1.startsWith("G"))).toEqual([]);
+      expect(touched.filter((a1) => a1.startsWith("F"))).toEqual([]);
     });
 
     test("Styles the header row bold on a grey background", () => {
@@ -78,7 +76,7 @@ describe("getOrCreateInputSheet", () => {
 
       getOrCreateInputSheet(spreadsheet.asSpreadsheet(), ja, () => typeOptions);
 
-      const header = spreadsheet.getSheetByName("入力")?.state("A1:F1");
+      const header = spreadsheet.getSheetByName("入力")?.state("A1:E1");
       expect(header).toMatchObject({ fontWeight: "bold", background: "#f3f3f3" });
     });
 
@@ -90,12 +88,12 @@ describe("getOrCreateInputSheet", () => {
       expect(spreadsheet.getSheetByName("入力")?.state("A2:A1000").numberFormat).toBe("yyyy-MM-dd");
     });
 
-    test("Formats the income and expense columns without a currency sign", () => {
+    test("Formats the amount column without a currency sign", () => {
       const spreadsheet = new FakeSpreadsheet();
 
       getOrCreateInputSheet(spreadsheet.asSpreadsheet(), ja, () => typeOptions);
 
-      expect(spreadsheet.getSheetByName("入力")?.state("E2:F1000").numberFormat).toBe("#,##0");
+      expect(spreadsheet.getSheetByName("入力")?.state("E2:E1000").numberFormat).toBe("#,##0");
     });
 
     test("Restricts the type column to the configured type options as a dropdown", () => {

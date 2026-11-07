@@ -10,9 +10,9 @@ export interface RawDataSource {
 /**
  * Processes raw data and converts it to the standard format
  *
- * @param data - Raw data from the spreadsheet (columns A to F)
+ * @param data - Raw data from the spreadsheet (columns A to E)
  * @param source - Sheet name, sheet row of the first data row, and the error message for a rejected amount
- * @throws When an amount is negative or is not a plain number
+ * @throws When an amount is not a plain number
  * @returns Array of processed transaction data (entries with an empty category are excluded)
  */
 export const processRawData = (data: unknown[][], source: RawDataSource): TransactionData[] => {
@@ -20,14 +20,13 @@ export const processRawData = (data: unknown[][], source: RawDataSource): Transa
   let lastValidDate: Date | null = null;
   let lastValidType: string | null = null;
 
-  // Column index definitions (columns A to F)
+  // Column index definitions (columns A to E)
   const COLUMN = {
     DATE: 0,
     TYPE: 1,
     CATEGORY: 2,
     DESCRIPTION: 3,
-    INCOME: 4,
-    EXPENSE: 5,
+    AMOUNT: 4,
   } as const;
 
   // Process every row
@@ -35,13 +34,12 @@ export const processRawData = (data: unknown[][], source: RawDataSource): Transa
     const row = data[i];
 
     // Skip blank rows
-    if (!row[0] && !row[1] && !row[2] && !row[3] && !row[4] && !row[5]) {
+    if (!row[0] && !row[1] && !row[2] && !row[3] && !row[4]) {
       continue;
     }
 
-    const income = parseAmount(row[COLUMN.INCOME]);
-    const expense = parseAmount(row[COLUMN.EXPENSE]);
-    if (income === null || expense === null) {
+    const amount = parseAmount(row[COLUMN.AMOUNT]);
+    if (amount === null) {
       throw new Error(source.describeInvalidAmount(source.sheetName, source.firstRow + i));
     }
 
@@ -67,9 +65,7 @@ export const processRawData = (data: unknown[][], source: RawDataSource): Transa
       type: type as string,
       category: row[COLUMN.CATEGORY] as string,
       description: row[COLUMN.DESCRIPTION] as string,
-      income: income,
-      expense: expense,
-      total: income - expense,
+      amount,
     });
   }
 
