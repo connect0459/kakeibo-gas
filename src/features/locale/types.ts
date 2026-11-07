@@ -86,6 +86,7 @@ export type Locale = DeepReadonly<{
     initializeConfirmTitle: string;
     initializeConfirmBody: string;
     initialized: string;
+    busy: string;
     archiveFailed: (message: string) => string;
     initializeFailed: (message: string) => string;
     summaryFailed: (message: string) => string;

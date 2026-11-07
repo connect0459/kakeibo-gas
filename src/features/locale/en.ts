@@ -82,6 +82,7 @@ export const en: Locale = {
     initializeConfirmTitle: "Reset input sheet",
     initializeConfirmBody: "All data will be deleted. This cannot be undone. Continue?",
     initialized: "The input sheet was reset.",
+    busy: "Another operation is still running. Try again in a moment.",
     archiveFailed: (message) => `An error occurred while archiving: ${message}`,
     initializeFailed: (message) => `An error occurred while resetting: ${message}`,
     summaryFailed: (message) => `An error occurred while summarizing: ${message}`,

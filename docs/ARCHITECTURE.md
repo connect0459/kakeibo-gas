@@ -23,6 +23,7 @@ kakeibo-gas/
 │       ├── input/                 # getOrCreateInputSheet
 │       ├── locale/                # ja / en dictionaries, resolveLocale, detectLocale
 │       ├── result/                # displayResults (summary and category tables)
+│       ├── lock/                  # runExclusively (serialize runs behind a lock)
 │       └── throttle/              # isWithinThrottleWindow (edit-trigger throttle decision)
 ├── tests/
 │   ├── __mocks__/                 # Fakes for GAS globals
@@ -114,6 +115,7 @@ A single GAS script; each feature below is a directory under `src/features/`.
 | `input` | Create the input sheet: header row, styles, date and amount formats, type dropdown | `getOrCreateInputSheet` | Unit (fake spreadsheet) |
 | `locale` | Text dictionaries (`ja`, `en`) and the rule that picks one for a spreadsheet. `detectLocale` reads a spreadsheet's sheet names and locale and picks the dictionary | No (a minimal spreadsheet interface) | Unit |
 | `result` | Write the summary and the income and expense tables to the result sheet, and return their row ranges | `displayResults` | Unit (fake sheet) |
+| `lock` | Run work only while holding a lock (`tryLock`/`releaseLock`), release it on failure, and report a skipped run | `runExclusively` | Unit (in-memory lock) |
 | `throttle` | Decide whether a recorded last run is still inside the throttle window | No | Unit |
 
 `src/main.ts` has no tests of its own; the code that creates the input sheet and writes the result tables was moved out so that it is covered (`features/input`, `features/result`). Result sheet creation (`getOrCreateResultSheet`), the charts, and the archive flow still live in `main.ts` untested. `tests/architecture/` scans the production sources and fails on a Japanese string literal outside the `ja` dictionary (only `features/config/defaultConfigRows.ja.ts`, the Japanese default config rows, is exempt). `tests/integration/` combines feature functions (config reading with aggregation, archive sheet creation with archive reading) but does not run `main.ts`. The fake spreadsheet in `src/testing/` keeps one final state per A1 range (value, format, style, validation), so a test can check what a range ended up as but not the order of writes, and a write to an overlapping range is not merged into another.
@@ -147,11 +149,16 @@ Input and archive columns: date, type, category, description, income, expense (A
 - **Type**: `CacheService` script cache
 - **Purpose**: Deduplicate edit-triggered aggregation runs (key `lastRun_generateStats`, 60 seconds); explicit actions are never throttled
 
+### 4.3 Script lock
+
+- **Type**: `LockService` script lock (no extra OAuth scope)
+- **Purpose**: Serialize aggregation, archive, and input reset so they never interleave. The edit trigger (`generateStatistics`) does not wait and skips when the lock is held; menu actions wait up to 30 seconds and then show a busy message. Confirmation and result dialogs are shown outside the lock. The throttle covers repeated triggers; the lock covers overlap
+
 ## 5. External Integrations / APIs
 
 | Service | Purpose | Integration method |
 | :--- | :--- | :--- |
-| Google Apps Script services (`SpreadsheetApp`, `HtmlService`, `CacheService`, `Charts`) | Read and write sheets, show UI, cache, build charts | Global objects provided by the GAS runtime (types from `@types/google-apps-script`) |
+| Google Apps Script services (`SpreadsheetApp`, `HtmlService`, `CacheService`, `LockService`, `Charts`) | Read and write sheets, show UI, cache, build charts | Global objects provided by the GAS runtime (types from `@types/google-apps-script`) |
 | `clasp` | Upload the bundle to the Apps Script project | Developer CLI, run locally; not used by CI |
 
 ## 6. Deployment & Infrastructure
