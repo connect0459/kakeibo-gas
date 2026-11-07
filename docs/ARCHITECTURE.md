@@ -171,7 +171,7 @@ Input and archive columns: date, type, category, description, income, expense (A
 ## 7. Security Considerations
 
 - **Authentication**: The script runs as the Google account using the spreadsheet; there is no separate login.
-- **Authorization**: The manifest declares no `oauthScopes`, so scopes are inferred by Apps Script from the services the code uses.
+- **Authorization**: The manifest declares `oauthScopes` explicitly: `spreadsheets.currentonly` (only the bound spreadsheet) and `script.container.ui` (menus and dialogs). Without them Apps Script infers `spreadsheets`, which covers every spreadsheet in the user's Drive. `tests/architecture/oauthScopes.test.ts` fails when the scopes are missing or fall outside this allowlist; add a scope only when a service call fails without it.
 - **Data Encryption**: Data stays in Google Sheets; encryption is Google's.
 - **Key Security Tools/Practices**: No secrets in the repository. GitHub Actions are pinned by commit SHA and run with `contents: read` (`contents: write` only for the release job). See [`SECURITY.md`](../SECURITY.md).
 
