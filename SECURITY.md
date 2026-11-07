@@ -31,6 +31,14 @@ The following are **out of scope**:
 - Vulnerabilities in Google Apps Script, Google Sheets, or `clasp` themselves — report those to Google.
 - Issues that require the attacker to already have edit access to the spreadsheet.
 
+## Logging and Privacy
+
+The script writes to the Apps Script execution log, which is stored in Cloud Logging when the project is linked to a Google Cloud project. The manifest sets `exceptionLogging` to `STACKDRIVER`, the manifest value for Cloud Logging, so uncaught exceptions are also recorded there.
+
+- **Routine runs** log fixed step messages (for example, "Aggregation started"), record and option counts, and the resolved locale ID. They never log amounts, category names, dates, or any other spreadsheet content.
+- **Failed runs** log the error object. An error message can name a category that is missing from the config sheet, so treat execution logs of failed runs as potentially containing category names.
+- Anyone with access to the linked Cloud project can read these logs. Amounts and per-category totals are never written to them.
+
 ## Disclosure Policy
 
 Once a fix is released, a GitHub Security Advisory will be published with full details. The typical timeline from report to public disclosure is 30 days, though this may be extended by mutual agreement when a fix requires significant changes.
