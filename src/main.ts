@@ -32,12 +32,7 @@ const getActiveLocale = (): Locale => {
   if (!cachedLocale) {
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     cachedLocale = detectLocale(spreadsheet);
-    console.log(
-      "Language:",
-      cachedLocale.id,
-      "| spreadsheet locale:",
-      spreadsheet.getSpreadsheetLocale(),
-    );
+    console.log("Language:", cachedLocale.id);
   }
   return cachedLocale;
 };
@@ -96,7 +91,6 @@ const getConfigData = (): ConfigSheetData => {
   // Debug: check the config data that was read
   console.log("Data read from the config sheet:");
   console.log("  - type options:", cachedConfigData.typeOptions.length);
-  console.log("  - excluded categories:", JSON.stringify(cachedConfigData.catalog.excludedNames()));
 
   return cachedConfigData;
 };
@@ -431,7 +425,7 @@ const generateStatisticsForPeriod = (
   title: string,
 ): boolean => {
   try {
-    console.log(`Aggregation started: ${startDate} to ${endDate}`);
+    console.log("Aggregation started");
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const timeZone = getActiveTimeZone();
 
@@ -465,9 +459,6 @@ const generateStatisticsForPeriod = (
       throw new Error(locale.alerts.categoriesNotListed(unlistedCategories));
     }
 
-    console.log("======= Config =======");
-    console.log("Excluded categories:", JSON.stringify(catalog.excludedNames()));
-
     // Aggregate by income/expense type
     const incomeByCategory = aggregateByCategory(
       filteredData,
@@ -484,9 +475,7 @@ const generateStatisticsForPeriod = (
 
     // Debug info for the aggregation results
     console.log("======= Aggregation result =======");
-    console.log("Income by category:", JSON.stringify(incomeByCategory));
-    console.log("Expense by category:", JSON.stringify(expenseByCategory));
-    console.log(`Filtered records: ${filteredData.length}`);
+    console.log("Filtered records:", filteredData.length);
 
     // Prepare the result sheet
     let resultSheet = ss.getSheetByName(getActiveLocale().sheets.result);
@@ -613,7 +602,7 @@ const createCharts = (
             .build();
 
           sheet.insertChart(incomeChart);
-          console.log(`Income chart created: rows ${incomeStartRow} to ${incomeEndRow}`);
+          console.log("Income chart created");
         }
       } else {
         console.log("Income section not found");
@@ -652,7 +641,7 @@ const createCharts = (
             .build();
 
           sheet.insertChart(expenseChart);
-          console.log(`Expense chart created: rows ${expenseStartRow} to ${expenseEndRow}`);
+          console.log("Expense chart created");
         }
       } else {
         console.log("Expense section not found");
