@@ -13,7 +13,7 @@ The spreadsheet UI, sheet names, headers, and default data were Japanese string 
 - **Sheet names** are how the script finds its sheets, and the maintainer's existing spreadsheet is keyed to the Japanese names.
 - **Whether a category is income or expense** was decided by the category name starting with `収入` or `支出`. A category is user data, so this tied the logic to the language the user happened to write names in. Exclusion had the same problem: it matched the last part of a flagged name anywhere in a category.
 
-The script needs to work for English-speaking users without breaking the one spreadsheet already in use, which was verified against exports of its sheets.
+The script needs to work for English-speaking users without breaking the one spreadsheet already in use; compatibility was verified against exports of its sheets.
 
 ## Decision
 
