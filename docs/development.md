@@ -1,6 +1,6 @@
 # Developer Guide
 
-This document is a developer guide for the kakeibo-gas project, covering everything from setting up the development environment to day-to-day development workflows.
+This guide covers developing kakeibo-gas, from setting up the environment to the day-to-day workflow.
 
 ## Table of Contents
 
@@ -62,13 +62,13 @@ To use clasp, you need to enable the Google Apps Script API.
 
 ### 4. Log in to clasp
 
-Authentication with your Google account is required the first time only.
+You only need to authenticate the first time.
 
 ```bash
 npx clasp login
 ```
 
-A browser opens and asks you to log in with your Google account. Once you approve, the credentials are saved to `~/.clasprc.json`.
+A browser window opens for you to sign in with your Google account. After you approve, the credentials are saved to `~/.clasprc.json`.
 
 ### 5. Create your own Apps Script project
 
@@ -145,7 +145,7 @@ The clasp configuration file. It contains your GAS project's script ID and the p
 
 #### `.claspignore`
 
-Specifies the files excluded when running clasp push. Basically, only `dist/**/*.js` and `appsscript.json` are pushed.
+Specifies the files excluded when running clasp push. In practice, only `dist/**/*.js` and `appsscript.json` are pushed.
 
 #### `rollup.config.js`
 
@@ -539,7 +539,7 @@ Check that the `removeExports` plugin in `rollup.config.js` is working correctly
 
 ## Feedback and Questions
 
-If you have any problems or questions during development, please give feedback through the following channels:
+If you run into problems or have questions, use one of these channels:
 
 - **Issue**: [GitHub Issues](https://github.com/connect0459/kakeibo-gas/issues)
 - **Pull Request**: Improvement suggestions are welcome
